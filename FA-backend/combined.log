@@ -1,0 +1,6 @@
+2025-01-28T02:06:54.340Z [[31merror[39m]: Failed to start server: password authentication failed for user "username"
+2025-01-28T02:07:14.494Z [[31merror[39m]: Failed to start server: password authentication failed for user "username"
+2025-01-28T02:21:42.674Z [[32minfo[39m]: Database connection has been established successfully.
+2025-01-28T02:21:42.721Z [[32minfo[39m]: Database synced successfully
+2025-01-28T02:21:42.726Z [[32minfo[39m]: 🚀 Server running on port 5001
+2025-01-28T02:21:42.726Z [[32minfo[39m]: Health check available at http://localhost:5001/health

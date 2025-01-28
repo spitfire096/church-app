@@ -1,0 +1,27 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "admin!#123Wci",
+    "database": "church_app",
+    "host": "localhost",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "admin!#123Wci",
+    "database": "church_app_test",
+    "host": "localhost",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "admin!#123Wci",
+    "database": "church_app_prod",
+    "host": "localhost",
+    "port": 5432,
+    "dialect": "postgres",
+    "logging": false
+  }
+} 
