@@ -4,31 +4,18 @@
 set -e
 
 # Update system and install necessary packages
-sudo yum update -y
-sudo yum install -y java-11-openjdk-devel wget unzip postgresql postgresql-server
-
-# Initialize PostgreSQL
-sudo postgresql-setup initdb
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-
-# Create SonarQube user
-sudo useradd -r -m -U -d /opt/sonarqube -s /bin/bash sonarqube
-
-# Set up swap space (recommended for t2.micro/small instances)
-sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+sudo apt-get update
+sudo apt-get install -y openjdk-17-jdk wget unzip postgresql postgresql-contrib
 
 # Configure PostgreSQL
 sudo -u postgres psql -c "CREATE USER sonarqube WITH ENCRYPTED PASSWORD 'sonarqube';"
 sudo -u postgres psql -c "CREATE DATABASE sonarqube OWNER sonarqube;"
-sudo -u postgres psql -c "ALTER USER sonarqube WITH SUPERUSER;"
+
+# Create SonarQube user
+sudo useradd -r -m -U -d /opt/sonarqube -s /bin/bash sonarqube
 
 # Download and extract SonarQube
-SONAR_VERSION="9.9.0.65466"
+SONAR_VERSION="10.3.0.82913"
 cd /opt
 sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-${SONAR_VERSION}.zip
 sudo unzip sonarqube-${SONAR_VERSION}.zip
@@ -54,8 +41,8 @@ sonarqube   -   nproc    4096
 EOT
 
 sudo tee -a /etc/sysctl.conf > /dev/null <<EOT
-vm.max_map_count=262144
-fs.file-max=65536
+vm.max_map_count=524288
+fs.file-max=131072
 EOT
 
 sudo sysctl -p
@@ -94,5 +81,5 @@ echo "1. Initial startup may take a few minutes"
 echo "2. Check status with: sudo systemctl status sonarqube"
 echo "3. Access SonarQube at: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):9000"
 echo "4. Default credentials: admin / admin"
-echo "5. Check logs with: tail -f /opt/sonarqube/logs/sonar.log"
+echo "5. Check logs with: sudo tail -f /opt/sonarqube/logs/sonar.log"
 echo "6. Remember to configure security group to allow port 9000" 

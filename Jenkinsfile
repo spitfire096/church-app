@@ -29,14 +29,17 @@ pipeline {
         stage('Frontend SonarQube Analysis') {
             steps {
                 dir('FA-frontend') {
-                    withSonarQubeEnv('SonarQube') {
-                        sh """
-                            sonar-scanner \
-                            -Dsonar.projectKey=church-app-frontend \
-                            -Dsonar.sources=src \
-                            -Dsonar.host.url=http://localhost:9000 \
-                            -Dsonar.login=${SONAR_TOKEN}
-                        """
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        withSonarQubeEnv('SonarQube') {
+                            sh """
+                                ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=church-app-frontend \
+                                -Dsonar.sources=. \
+                                -Dsonar.host.url=http://your-sonarqube-ip:9000 \
+                                -Dsonar.login=${SONAR_TOKEN}
+                            """
+                        }
                     }
                 }
             }
@@ -56,14 +59,17 @@ pipeline {
         stage('Backend SonarQube Analysis') {
             steps {
                 dir('FA-backend') {
-                    withSonarQubeEnv('SonarQube') {
-                        sh """
-                            sonar-scanner \
-                            -Dsonar.projectKey=church-app-backend \
-                            -Dsonar.sources=src \
-                            -Dsonar.host.url=http://localhost:9000 \
-                            -Dsonar.login=${SONAR_TOKEN}
-                        """
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        withSonarQubeEnv('SonarQube') {
+                            sh """
+                                ${scannerHome}/bin/sonar-scanner \
+                                -Dsonar.projectKey=church-app-backend \
+                                -Dsonar.sources=. \
+                                -Dsonar.host.url=http://your-sonarqube-ip:9000 \
+                                -Dsonar.login=${SONAR_TOKEN}
+                            """
+                        }
                     }
                 }
             }
