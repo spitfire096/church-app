@@ -5,6 +5,8 @@ pipeline {
     environment {
         GITHUB_CREDS = credentials('nexus-credentials')
         SONAR_TOKEN = credentials('sonar-token')
+        NEXUS_CREDS = credentials('nexus-credentials')
+        NPM_CONFIG_USERCONFIG = "${env.WORKSPACE}/.npmrc"
     }
     
     // Tool configurations
@@ -32,6 +34,20 @@ pipeline {
                         credentialsId: 'nexus-credentials'
                     ]]
                 ])
+            }
+        }
+        
+        stage('NPM Setup') {
+            steps {
+                script {
+                    // Create .npmrc file with proper authentication
+                    sh """
+                        echo "registry=http://54.235.236.251:8081/repository/npm-group/" > .npmrc
+                        echo "//54.235.236.251:8081/repository/npm-group/:_auth=\$(echo -n ${NEXUS_CREDS_USR}:${NEXUS_CREDS_PSW} | base64)" >> .npmrc
+                        echo "email=${NEXUS_CREDS_USR}@example.com" >> .npmrc
+                        echo "always-auth=true" >> .npmrc
+                    """
+                }
             }
         }
         
