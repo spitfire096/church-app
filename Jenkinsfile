@@ -42,28 +42,17 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
-                            # Create base .npmrc file with retry and timeout settings
+                            # Create minimal .npmrc file
                             echo "registry=http://54.235.236.251:8081/repository/npm-group/" > .npmrc
                             echo "//54.235.236.251:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
-                            echo "email=admin@example.com" >> .npmrc
-                            echo "fetch-retries=5" >> .npmrc
-                            echo "fetch-retry-factor=2" >> .npmrc
-                            echo "fetch-retry-mintimeout=20000" >> .npmrc
-                            echo "fetch-retry-maxtimeout=120000" >> .npmrc
                             
-                            # Test Nexus connectivity
-                            curl -v http://54.235.236.251:8081/repository/npm-group/
-                            
-                            # Create project directories and copy .npmrc
+                            # Copy to project directories
                             mkdir -p FA-frontend FA-backend
                             cp .npmrc FA-frontend/.npmrc
                             cp .npmrc FA-backend/.npmrc
                             
-                            # Set npm config for the current context
+                            # Set npm config
                             npm config set userconfig \$PWD/.npmrc
-                            
-                            # Clear npm cache
-                            npm cache clean --force
                         """
                     }
                 }
