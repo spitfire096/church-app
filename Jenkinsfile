@@ -42,9 +42,16 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
-                            # Create .npmrc with minimal settings
-                            echo "registry=http://54.235.236.251:8081/repository/npm-group/" > .npmrc
-                            echo "//54.235.236.251:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            # Test direct connection first
+                            if ! curl -f -s -m 10 http://54.235.236.251:8081/repository/npm-group/; then
+                                echo "Cannot connect to Nexus, falling back to public registry"
+                                echo "registry=https://registry.npmjs.org/" > .npmrc
+                            else
+                                # Use Nexus if available
+                                echo "registry=http://54.235.236.251:8081/repository/npm-group/" > .npmrc
+                                echo "//54.235.236.251:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            fi
+                            
                             echo "strict-ssl=false" >> .npmrc
                             
                             # Copy to project directories
@@ -60,13 +67,22 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Test network connectivity
-                        curl -v http://54.235.236.251:8081/repository/npm-group/
+                        # Test basic connectivity
+                        ping -c 4 54.235.236.251
                         
-                        # Configure npm timeouts and retries
-                        npm config set fetch-timeout 300000
-                        npm config set fetch-retries 5
-                        npm config set fetch-retry-maxtimeout 120000
+                        # Check route
+                        traceroute 54.235.236.251
+                        
+                        # Test with different timeout
+                        curl -v --connect-timeout 10 http://54.235.236.251:8081/repository/npm-group/
+                        
+                        # Check if port is reachable
+                        nc -zv 54.235.236.251 8081
+                        
+                        # Configure npm with longer timeouts
+                        npm config set fetch-timeout 600000
+                        npm config set fetch-retries 10
+                        npm config set fetch-retry-maxtimeout 300000
                         npm config set strict-ssl false
                     '''
                 }
@@ -77,8 +93,8 @@ pipeline {
             steps {
                 dir('FA-frontend') {
                     sh '''
-                        # Install dependencies
-                        npm ci --verbose
+                        # Try npm ci first, fall back to npm install if it fails
+                        npm ci --verbose || npm install --verbose
                         
                         # Install eslint explicitly if needed
                         if ! npm list eslint; then
