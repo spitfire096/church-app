@@ -10,7 +10,7 @@ pipeline {
     // Tool configurations
     tools {
         git 'Default'
-        nodejs 'NodeJS'
+        nodejs 'NodeJS 18'
     }
     
     // Pipeline options
