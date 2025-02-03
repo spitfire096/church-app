@@ -114,13 +114,21 @@ pipeline {
     
     post {
         always {
-            cleanWs()
+            script {
+                try {
+                    cleanWs()
+                } catch (Exception e) {
+                    echo "Warning: Workspace cleanup failed: ${e.message}"
+                }
+            }
         }
         success {
             echo 'Pipeline completed successfully!'
         }
         failure {
             echo 'Pipeline failed!'
+            // Consider adding notifications here
+            // emailext, slack notifications, etc.
         }
     }
 } 
