@@ -40,19 +40,22 @@ pipeline {
         stage('NPM Setup') {
             steps {
                 script {
-                    // Create .npmrc file with proper authentication
-                    sh """
-                        npm config set registry http://54.235.236.251:8081/repository/npm-group/
-                        echo -n "${NEXUS_CREDS_USR}:${NEXUS_CREDS_PSW}" | base64 > .auth
-                        npm config set //54.235.236.251:8081/repository/npm-group/:_auth \$(cat .auth)
-                        npm config set email admin@example.com
-                        rm .auth
-                        
-                        # Copy npm config to project directories
-                        mkdir -p FA-frontend FA-backend
-                        cp ~/.npmrc FA-frontend/.npmrc
-                        cp ~/.npmrc FA-backend/.npmrc
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh """
+                            # Create base .npmrc file
+                            echo "registry=http://54.235.236.251:8081/repository/npm-group/" > .npmrc
+                            echo "//54.235.236.251:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            echo "email=admin@example.com" >> .npmrc
+                            
+                            # Create project directories and copy .npmrc
+                            mkdir -p FA-frontend FA-backend
+                            cp .npmrc FA-frontend/.npmrc
+                            cp .npmrc FA-backend/.npmrc
+                            
+                            # Set npm config for the current context
+                            npm config set userconfig \$PWD/.npmrc
+                        """
+                    }
                 }
             }
         }
