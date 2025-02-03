@@ -67,22 +67,16 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Test basic connectivity
-                        ping -c 4 54.235.236.251
+                        # Test npm registry endpoint
+                        echo "Testing npm registry endpoint..."
+                        curl -v http://54.235.236.251:8081/repository/npm-group/
                         
-                        # Check route
-                        traceroute 54.235.236.251
+                        # Test Nexus UI endpoint
+                        echo "Testing Nexus UI endpoint..."
+                        curl -v http://54.235.236.251:8081/
                         
-                        # Test with different timeout
-                        curl -v --connect-timeout 10 http://54.235.236.251:8081/repository/npm-group/
-                        
-                        # Check if port is reachable
-                        nc -zv 54.235.236.251 8081
-                        
-                        # Configure npm with longer timeouts
-                        npm config set fetch-timeout 600000
-                        npm config set fetch-retries 10
-                        npm config set fetch-retry-maxtimeout 300000
+                        # Configure npm
+                        npm config set registry http://54.235.236.251:8081/repository/npm-group/
                         npm config set strict-ssl false
                     '''
                 }
