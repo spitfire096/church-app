@@ -24,7 +24,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                cleanWs()
+                deleteDir()  // Deletes everything before checking out code
                 checkout([$class: 'GitSCM',
                     branches: [[name: '*/main']],
                     userRemoteConfigs: [[
@@ -113,15 +113,6 @@ pipeline {
     }
     
     post {
-        always {
-            script {
-                try {
-                    cleanWs()
-                } catch (Exception e) {
-                    echo "Warning: Workspace cleanup failed: ${e.message}"
-                }
-            }
-        }
         success {
             echo 'Pipeline completed successfully!'
         }
