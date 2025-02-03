@@ -46,6 +46,16 @@ pipeline {
                         echo "//54.235.236.251:8081/repository/npm-group/:_auth=\$(echo -n ${NEXUS_CREDS_USR}:${NEXUS_CREDS_PSW} | base64)" >> .npmrc
                         echo "email=${NEXUS_CREDS_USR}@example.com" >> .npmrc
                         echo "always-auth=true" >> .npmrc
+                        
+                        # Copy .npmrc to frontend and backend directories
+                        cp .npmrc FA-frontend/.npmrc
+                        mkdir -p FA-backend && cp .npmrc FA-backend/.npmrc
+                        
+                        # Also set npm config globally for this user
+                        npm config set registry http://54.235.236.251:8081/repository/npm-group/
+                        npm config set //54.235.236.251:8081/repository/npm-group/:_auth \$(echo -n ${NEXUS_CREDS_USR}:${NEXUS_CREDS_PSW} | base64)
+                        npm config set email ${NEXUS_CREDS_USR}@example.com
+                        npm config set always-auth true
                     """
                 }
             }
@@ -54,7 +64,13 @@ pipeline {
         stage('Frontend Setup') {
             steps {
                 dir('FA-frontend') {
-                    sh 'npm install'
+                    sh '''
+                        # Verify npm configuration
+                        npm config list
+                        
+                        # Install dependencies
+                        npm install --verbose
+                    '''
                 }
             }
         }
