@@ -103,8 +103,8 @@ pipeline {
             steps {
                 dir('FA-frontend') {
                     sh '''
-                        # Install Next.js and dependencies globally first
-                        npm install -g next
+                        # Install Next.js locally instead of globally
+                        npm install next --save-dev
 
                         # Create package.json if it doesn't exist
                         if [ ! -f "package.json" ]; then
@@ -123,7 +123,7 @@ pipeline {
 EOF
                         fi
 
-                        # Install dependencies
+                        # Install dependencies with audit disabled
                         npm install --save-dev \
                             @typescript-eslint/parser \
                             @typescript-eslint/eslint-plugin \
@@ -132,7 +132,8 @@ EOF
                             @types/node \
                             @types/react \
                             jest \
-                            @types/jest
+                            @types/jest \
+                            --no-audit
 
                         # Install React and Next.js dependencies
                         npm install --save \
@@ -141,10 +142,11 @@ EOF
                             react@18.2.0 \
                             react-dom@18.2.0 \
                             @heroicons/react \
-                            @headlessui/react
+                            @headlessui/react \
+                            --no-audit
 
                         # Install remaining dependencies
-                        npm install --legacy-peer-deps --verbose
+                        npm install --legacy-peer-deps --no-audit --verbose
 
                         # Create tsconfig.json if it doesn't exist
                         if [ ! -f "tsconfig.json" ]; then
@@ -175,6 +177,9 @@ EOF
 }
 EOF
                         fi
+
+                        # Create .npmrc to disable audit
+                        echo "audit=false" >> .npmrc
                     '''
                 }
             }
