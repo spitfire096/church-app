@@ -82,17 +82,28 @@ pipeline {
                 dir('FA-frontend') {
                     sh '''
                         # Create required directories
-                        mkdir -p src/contexts src/components src/app
+                        mkdir -p src/contexts src/components src/app/dashboard/users
 
-                        # Create AuthContext
-                        cat > src/contexts/AuthContext.tsx << 'EOF'
-                        "use client";
-                        import { createContext, useContext } from 'react';
-                        export const AuthContext = createContext({});
-                        export const useAuth = () => useContext(AuthContext);
-                        EOF
+                        # Add "use client" directive to dashboard users page
+                        if [ -f "src/app/dashboard/users/page.tsx" ]; then
+                            # Add "use client" at the top if it doesn't exist
+                            if ! grep -q "use client" src/app/dashboard/users/page.tsx; then
+                                sed -i '1i"use client";\\' src/app/dashboard/users/page.tsx
+                            fi
+                        else
+                            # Create the file if it doesn't exist
+                            cat > src/app/dashboard/users/page.tsx << 'EOF'
+"use client";
 
-                        # Add "use client" directive to client components
+import { useState, useEffect } from 'react';
+import DashboardLayout from '@/app/components/DashboardLayout';
+import { api } from '@/lib/api';
+
+// Your component code...
+EOF
+                        fi
+
+                        # Add "use client" directive to other client components
                         find src/app -type f -name "*.tsx" -exec sed -i '1i\\\"use client\";\\' {} \\;
                     '''
                 }
