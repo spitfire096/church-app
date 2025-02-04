@@ -42,17 +42,11 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
-                            # Test direct connection first
-                            if ! curl -f -s -m 10 http://50.19.13.242:8081/repository/npm-group/; then
-                                echo "Cannot connect to Nexus, falling back to public registry"
-                                echo "registry=https://registry.npmjs.org/" > .npmrc
-                            else
-                                # Use Nexus if available
-                                echo "registry=http://50.19.13.242:8081/repository/npm-group/" > .npmrc
-                                echo "//50.19.13.242:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
-                            fi
-                            
+                            # Create .npmrc with minimal settings
+                            echo "registry=http://50.19.13.242:8081/repository/npm-group/" > .npmrc
+                            echo "//50.19.13.242:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
                             echo "strict-ssl=false" >> .npmrc
+                            echo "legacy-peer-deps=true" >> .npmrc
                             
                             # Copy to project directories
                             cp .npmrc FA-frontend/.npmrc
@@ -87,12 +81,15 @@ pipeline {
             steps {
                 dir('FA-frontend') {
                     sh '''
-                        # Try npm ci first, fall back to npm install if it fails
-                        npm ci --verbose || npm install --verbose
+                        # Force specific React version
+                        npm install react@18.2.0 react-dom@18.2.0 --save-exact
+                        
+                        # Install dependencies with legacy peer deps
+                        npm install --legacy-peer-deps --verbose
                         
                         # Install eslint explicitly if needed
                         if ! npm list eslint; then
-                            npm install eslint@8.x --save-dev
+                            npm install eslint@8.x --save-dev --legacy-peer-deps
                         fi
                     '''
                 }
