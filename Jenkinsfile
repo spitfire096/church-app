@@ -43,13 +43,13 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
                             # Test direct connection first
-                            if ! curl -f -s -m 10 http://54.235.236.251:8081/repository/npm-group/; then
+                            if ! curl -f -s -m 10 http://50.19.13.242:8081/repository/npm-group/; then
                                 echo "Cannot connect to Nexus, falling back to public registry"
                                 echo "registry=https://registry.npmjs.org/" > .npmrc
                             else
                                 # Use Nexus if available
-                                echo "registry=http://54.235.236.251:8081/repository/npm-group/" > .npmrc
-                                echo "//54.235.236.251:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                                echo "registry=http://50.19.13.242:8081/repository/npm-group/" > .npmrc
+                                echo "//50.19.13.242:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
                             fi
                             
                             echo "strict-ssl=false" >> .npmrc
@@ -69,14 +69,14 @@ pipeline {
                     sh '''
                         # Test npm registry endpoint
                         echo "Testing npm registry endpoint..."
-                        curl -v http://54.235.236.251:8081/repository/npm-group/
+                        curl -v http://50.19.13.242:8081/repository/npm-group/
                         
                         # Test Nexus UI endpoint
                         echo "Testing Nexus UI endpoint..."
-                        curl -v http://54.235.236.251:8081/
+                        curl -v http://50.19.13.242:8081/
                         
                         # Configure npm
-                        npm config set registry http://54.235.236.251:8081/repository/npm-group/
+                        npm config set registry http://50.19.13.242:8081/repository/npm-group/
                         npm config set strict-ssl false
                     '''
                 }
@@ -120,7 +120,7 @@ pipeline {
                             ${tool('SonarScanner')}/bin/sonar-scanner \
                             -Dsonar.projectKey=church-app-frontend \
                             -Dsonar.sources=. \
-                            -Dsonar.host.url=\${SONAR_HOST_URL} \
+                            -Dsonar.host.url=http://34.234.73.197:9000 \
                             -Dsonar.login=\${SONAR_TOKEN}
                         """
                     }
@@ -160,7 +160,7 @@ pipeline {
                             ${tool('SonarScanner')}/bin/sonar-scanner \
                             -Dsonar.projectKey=church-app-backend \
                             -Dsonar.sources=. \
-                            -Dsonar.host.url=\${SONAR_HOST_URL} \
+                            -Dsonar.host.url=http://34.234.73.197:9000 \
                             -Dsonar.login=\${SONAR_TOKEN}
                         """
                     }
