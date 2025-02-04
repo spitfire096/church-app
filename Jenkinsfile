@@ -108,19 +108,19 @@ pipeline {
 
                         # Create package.json if it doesn't exist
                         if [ ! -f "package.json" ]; then
-                            cat > package.json << 'EOF'
-                            {
-                                "name": "fa-frontend",
-                                "version": "0.1.0",
-                                "private": true,
-                                "scripts": {
-                                    "dev": "next dev",
-                                    "build": "next build",
-                                    "start": "next start",
-                                    "lint": "next lint"
-                                }
-                            }
-                            EOF
+                            cat << 'EOF' > package.json
+{
+    "name": "fa-frontend",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    }
+}
+EOF
                         fi
 
                         # Install dependencies
@@ -148,32 +148,32 @@ pipeline {
 
                         # Create tsconfig.json if it doesn't exist
                         if [ ! -f "tsconfig.json" ]; then
-                            cat > tsconfig.json << 'EOF'
-                            {
-                                "compilerOptions": {
-                                    "target": "es5",
-                                    "lib": ["dom", "dom.iterable", "esnext"],
-                                    "allowJs": true,
-                                    "skipLibCheck": true,
-                                    "strict": true,
-                                    "forceConsistentCasingInFileNames": true,
-                                    "noEmit": true,
-                                    "esModuleInterop": true,
-                                    "module": "esnext",
-                                    "moduleResolution": "node",
-                                    "resolveJsonModule": true,
-                                    "isolatedModules": true,
-                                    "jsx": "preserve",
-                                    "incremental": true,
-                                    "baseUrl": ".",
-                                    "paths": {
-                                        "@/*": ["src/*"]
-                                    }
-                                },
-                                "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-                                "exclude": ["node_modules"]
-                            }
-                            EOF
+                            cat << 'EOF' > tsconfig.json
+{
+    "compilerOptions": {
+        "target": "es5",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "preserve",
+        "incremental": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        }
+    },
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+    "exclude": ["node_modules"]
+}
+EOF
                         fi
                     '''
                 }
