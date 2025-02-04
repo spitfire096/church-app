@@ -43,8 +43,8 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
                             # Create .npmrc with minimal settings
-                            echo "registry=http://50.19.13.242:8081/repository/npm-group/" > .npmrc
-                            echo "//50.19.13.242:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            echo "registry=http://184.72.89.112:8081/repository/npm-group/" > .npmrc
+                            echo "//184.72.89.112:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
                             echo "strict-ssl=false" >> .npmrc
                             echo "legacy-peer-deps=true" >> .npmrc
                             
@@ -63,14 +63,14 @@ pipeline {
                     sh '''
                         # Test npm registry endpoint
                         echo "Testing npm registry endpoint..."
-                        curl -v http://50.19.13.242:8081/repository/npm-group/
+                        curl -v http://184.72.89.112:8081/repository/npm-group/
                         
                         # Test Nexus UI endpoint
                         echo "Testing Nexus UI endpoint..."
-                        curl -v http://50.19.13.242:8081/
+                        curl -v http://184.72.89.112:8081/
                         
                         # Configure npm
-                        npm config set registry http://50.19.13.242:8081/repository/npm-group/
+                        npm config set registry http://184.72.89.112:8081/repository/npm-group/
                         npm config set strict-ssl false
                     '''
                 }
@@ -153,7 +153,7 @@ pipeline {
                             ${tool('SonarScanner')}/bin/sonar-scanner \
                             -Dsonar.projectKey=church-app-frontend \
                             -Dsonar.sources=. \
-                            -Dsonar.host.url=http://34.234.73.197:9000 \
+                            -Dsonar.host.url=http://3.84.182.219:9000 \
                             -Dsonar.login=\${SONAR_TOKEN}
                         """
                     }
@@ -224,7 +224,7 @@ pipeline {
                             ${tool('SonarScanner')}/bin/sonar-scanner \
                             -Dsonar.projectKey=church-app-backend \
                             -Dsonar.sources=. \
-                            -Dsonar.host.url=http://34.234.73.197:9000 \
+                            -Dsonar.host.url=http://3.84.182.219:9000 \
                             -Dsonar.login=\${SONAR_TOKEN}
                         """
                     }
