@@ -77,29 +77,60 @@ pipeline {
             }
         }
         
+        stage('Frontend Fix') {
+            steps {
+                dir('FA-frontend') {
+                    sh '''
+                        # Create required directories
+                        mkdir -p src/contexts src/components src/app
+
+                        # Create AuthContext
+                        cat > src/contexts/AuthContext.tsx << 'EOF'
+                        "use client";
+                        import { createContext, useContext } from 'react';
+                        export const AuthContext = createContext({});
+                        export const useAuth = () => useContext(AuthContext);
+                        EOF
+
+                        # Add "use client" directive to client components
+                        find src/app -type f -name "*.tsx" -exec sed -i '1i\\\"use client\";\\' {} \\;
+                    '''
+                }
+            }
+        }
+        
         stage('Frontend Setup') {
             steps {
                 dir('FA-frontend') {
                     sh '''
-                        # Create ESLint config
-                        cat > .eslintrc.js << 'EOF'
-                        module.exports = {
-                            extends: [
-                                'next/core-web-vitals',
-                                'eslint:recommended',
-                                'plugin:@typescript-eslint/recommended'
-                            ],
-                            parser: '@typescript-eslint/parser',
-                            plugins: ['@typescript-eslint'],
-                            root: true
-                        }
-                        EOF
-                        
+                        # Install Next.js and dependencies globally first
+                        npm install -g next
+
+                        # Create package.json if it doesn't exist
+                        if [ ! -f "package.json" ]; then
+                            cat > package.json << 'EOF'
+                            {
+                                "name": "fa-frontend",
+                                "version": "0.1.0",
+                                "private": true,
+                                "scripts": {
+                                    "dev": "next dev",
+                                    "build": "next build",
+                                    "start": "next start",
+                                    "lint": "next lint"
+                                }
+                            }
+                            EOF
+                        fi
+
                         # Install dependencies
                         npm install --save-dev \
                             @typescript-eslint/parser \
                             @typescript-eslint/eslint-plugin \
                             eslint-config-next \
+                            typescript \
+                            @types/node \
+                            @types/react \
                             jest \
                             @types/jest
 
@@ -114,6 +145,36 @@ pipeline {
 
                         # Install remaining dependencies
                         npm install --legacy-peer-deps --verbose
+
+                        # Create tsconfig.json if it doesn't exist
+                        if [ ! -f "tsconfig.json" ]; then
+                            cat > tsconfig.json << 'EOF'
+                            {
+                                "compilerOptions": {
+                                    "target": "es5",
+                                    "lib": ["dom", "dom.iterable", "esnext"],
+                                    "allowJs": true,
+                                    "skipLibCheck": true,
+                                    "strict": true,
+                                    "forceConsistentCasingInFileNames": true,
+                                    "noEmit": true,
+                                    "esModuleInterop": true,
+                                    "module": "esnext",
+                                    "moduleResolution": "node",
+                                    "resolveJsonModule": true,
+                                    "isolatedModules": true,
+                                    "jsx": "preserve",
+                                    "incremental": true,
+                                    "baseUrl": ".",
+                                    "paths": {
+                                        "@/*": ["src/*"]
+                                    }
+                                },
+                                "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+                                "exclude": ["node_modules"]
+                            }
+                            EOF
+                        fi
                     '''
                 }
             }
@@ -134,9 +195,9 @@ pipeline {
                         fi
                         
                         # Build with more verbose output
-                        npm run build || {
+                        NODE_ENV=production npm run build || {
                             echo "Build failed. Checking for specific issues..."
-                            ls -la src/contexts src/components
+                            ls -la src/contexts src/components src/app
                             cat .next/error.log || true
                             exit 1
                         }
@@ -157,37 +218,6 @@ pipeline {
                             -Dsonar.login=\${SONAR_TOKEN}
                         """
                     }
-                }
-            }
-        }
-        
-        stage('Frontend Fix') {
-            steps {
-                dir('FA-frontend') {
-                    sh '''
-                        # Add "use client" directive to client components
-                        find src/app -type f -name "*.tsx" -exec sed -i '1i\\\"use client\";\\' {} \\;
-                        
-                        # Create missing directories and files
-                        mkdir -p src/contexts src/components
-                        
-                        # Create AuthContext
-                        cat > src/contexts/AuthContext.tsx << 'EOF'
-                        "use client";
-                        import { createContext, useContext } from 'react';
-                        export const AuthContext = createContext({});
-                        export const useAuth = () => useContext(AuthContext);
-                        EOF
-                        
-                        # Create Editor component
-                        cat > src/components/Editor.tsx << 'EOF'
-                        "use client";
-                        import { useState } from 'react';
-                        export default function Editor() {
-                            return <div>Editor Component</div>;
-                        }
-                        EOF
-                    '''
                 }
             }
         }
