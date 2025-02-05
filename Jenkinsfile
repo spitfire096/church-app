@@ -91,6 +91,9 @@ pipeline {
             steps {
                 dir('FA-frontend') {
                     sh '''
+                        # Remove old pages directory if it exists
+                        rm -rf src/pages
+
                         # Create all required directories first
                         mkdir -p src/types
                         mkdir -p src/lib
