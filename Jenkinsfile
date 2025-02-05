@@ -94,7 +94,14 @@ pipeline {
                         # Remove old pages directory if it exists
                         rm -rf src/pages
 
+                        # Debug: Check if pages directory is really gone
+                        if [ -d "src/pages" ]; then
+                            echo "WARNING: src/pages still exists"
+                            ls -la src/pages
+                        fi
+
                         # Create all required directories first
+                        mkdir -p src/app
                         mkdir -p src/types
                         mkdir -p src/lib
                         mkdir -p src/contexts
@@ -103,6 +110,12 @@ pipeline {
                         mkdir -p src/app/dashboard/users
                         mkdir -p src/app/settings/email-templates
                         mkdir -p __tests__
+
+                        # Debug: Show file content if it exists
+                        if [ -f "src/pages/index.ts" ]; then
+                            echo "Content of src/pages/index.ts:"
+                            cat src/pages/index.ts
+                        fi
 
                         # Install dependencies
                         npm install --save bcryptjs @types/bcryptjs
