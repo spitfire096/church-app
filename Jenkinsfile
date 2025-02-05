@@ -132,7 +132,38 @@ declare module 'next-auth/jwt' {
 }
 EOF
 
-                        # Create API client
+                        # Create API types
+                        cat > src/types/api.d.ts << 'EOF'
+import { AxiosInstance } from 'axios';
+
+interface AuthAPI {
+    login: (email: string, password: string) => Promise<any>;
+}
+
+interface EmailTemplate {
+    id: string;
+    name: string;
+    content: string;
+}
+
+interface EmailAPI {
+    templates: {
+        list: () => Promise<EmailTemplate[]>;
+    };
+    logs: {
+        list: () => Promise<any[]>;
+    };
+}
+
+declare module 'axios' {
+    interface AxiosInstance {
+        auth: AuthAPI;
+        emails: EmailAPI;
+    }
+}
+EOF
+
+                        # Update API client
                         cat > src/lib/api.ts << 'EOF'
 import axios from 'axios';
 
@@ -140,6 +171,7 @@ const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
+// Add type-safe custom methods
 api.auth = {
     login: async (email: string, password: string) => {
         const response = await api.post('/auth/login', { email, password });
@@ -147,17 +179,31 @@ api.auth = {
     }
 };
 
+api.emails = {
+    templates: {
+        list: async () => {
+            const response = await api.get('/emails/templates');
+            return response.data;
+        }
+    },
+    logs: {
+        list: async () => {
+            const response = await api.get('/emails/logs');
+            return response.data;
+        }
+    }
+};
+
 export { api };
 EOF
 
-                        # Create auth route
+                        # Update auth route with proper NextAuth import
                         cat > src/app/api/auth/[...nextauth]/route.ts << 'EOF'
-import NextAuth from "next-auth";
+import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { compare } from 'bcryptjs';
 import { api } from "@/lib/api";
 
-const handler = NextAuth({
+export const authOptions = {
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -195,8 +241,9 @@ const handler = NextAuth({
             return session;
         }
     }
-});
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
 EOF
 
