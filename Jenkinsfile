@@ -441,14 +441,12 @@ export default function VerifyEmail() {
 }
 EOF
 
-                        # Create pages directory and index page
-                        mkdir -p src/pages
-
-                        # Create index page with proper TypeScript syntax
-                        cat > src/pages/index.tsx << 'EOF'
+                        # Create app page
+                        mkdir -p src/app
+                        cat > src/app/page.tsx << 'EOF'
 "use client";
 import { useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
     const router = useRouter();
