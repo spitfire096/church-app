@@ -325,18 +325,19 @@ EOF
                         script {
                             try {
                                 sh '''#!/bin/bash
+                                    # Ensure all client components have "use client" directive
+                                    find src/app -type f -name "*.tsx" ! -name "layout.tsx" -exec grep -L "use client" {} \\; | while read -r file; do
+                                        echo '"use client";' | cat - "$file" > temp && mv temp "$file"
+                                    done
+
                                     # Run TypeScript compiler with error reporting
                                     npx tsc --noEmit --pretty || {
                                         echo "TypeScript errors found, but continuing due to ignoreBuildErrors=true"
                                     }
                                     
-                                    # Create production environment file
-                                    echo "NODE_ENV=production" > .env.production
-                                    echo "NEXT_PUBLIC_API_URL=https://your-api.com" >> .env.production
-                                    
                                     # Build with detailed logging
                                     export NODE_OPTIONS="--max-old-space-size=4096"
-                                    npm run build > build.log 2>&1
+                                    NEXT_TELEMETRY_DISABLED=1 npm run build > build.log 2>&1
                                     BUILD_EXIT_CODE=$?
                                     cat build.log
                                     
@@ -346,14 +347,7 @@ EOF
                                     fi
                                 '''
                             } catch (err) {
-                                // Archive both build and TypeScript error logs
-                                sh '''#!/bin/bash
-                                    npx tsc --noEmit --pretty > typescript-errors.log 2>&1 || true
-                                '''
-                                archiveArtifacts artifacts: '''
-                                    build.log,
-                                    typescript-errors.log
-                                ''', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'build.log,typescript-errors.log', allowEmptyArchive: true
                                 throw err
                             }
                         }
