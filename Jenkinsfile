@@ -110,11 +110,9 @@ export default function Home() {
     const router = useRouter();
 
     useEffect(() => {
-        // Add semicolons and proper formatting
         const checkAuth = async () => {
             try {
-                // Using a simpler regex pattern to avoid escaping issues
-                const validEmail = /[^@]+@[^@]+\.[^@]+/;
+                const validEmail = new RegExp('[^@]+@[^@]+\\.[^@]+');
                 return true;
             } catch (error) {
                 return false;
