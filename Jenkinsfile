@@ -180,63 +180,50 @@ export default function UsersPage() {
     );
 }
 EOF
-                    '''
-                }
-            }
-        }
-        
-        stage('Frontend Setup') {
-            steps {
-                dir('FA-frontend') {
-                    sh '''
-                        # Install Next.js locally instead of globally
-                        npm install next --save-dev
 
-                        # Create package.json if it doesn't exist
-                        if [ ! -f "package.json" ]; then
-                            cat << 'EOF' > package.json
-{
-    "name": "fa-frontend",
-    "version": "0.1.0",
-    "private": true,
-    "scripts": {
-        "dev": "next dev",
-        "build": "next build",
-        "start": "next start",
-        "test": "jest",
-        "test:watch": "jest --watch",
-        "test:coverage": "jest --coverage",
-        "lint": "next lint"
-    },
-    "dependencies": {
-        "next": "^15.1.6",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0"
-    },
-    "devDependencies": {
-        "@testing-library/jest-dom": "^6.4.0",
-        "@testing-library/react": "^14.2.0",
-        "@types/jest": "^29.5.0",
-        "jest": "^29.7.0",
-        "jest-environment-jsdom": "^29.7.0"
-    }
+                    # Fix EmailTemplatePreview.tsx
+                    cat > src/app/components/EmailTemplatePreview.tsx << 'EOF'
+"use client";
+
+import { useState } from 'react';
+
+interface Variable {
+    key: string;
+    label: string;
+}
+
+export default function EmailTemplatePreview() {
+    const [variables] = useState<Variable[]>([
+        { key: "{{name}}", label: "Name" },
+        { key: "{{email}}", label: "Email" }
+    ]);
+
+    return (
+        <div className="bg-white shadow rounded-lg p-6">
+            <div className="space-y-4">
+                <div className="border-b pb-4">
+                    <h3 className="text-lg font-medium">Available Variables</h3>
+                    <div className="mt-2 grid grid-cols-2 gap-4">
+                        {variables.map((variable, index) => (
+                            <div
+                                key={index}
+                                className="p-2 bg-gray-50 rounded"
+                            >
+                                <span className="font-medium">{variable.label}</span>
+                                <br />
+                                <span className="text-gray-500 text-xs">{variable.key}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
 EOF
-                        fi
 
-                        # Install additional dependencies with audit disabled
-                        npm install --save-dev \
-                            @typescript-eslint/parser \
-                            @typescript-eslint/eslint-plugin \
-                            eslint-config-next \
-                            typescript \
-                            @types/node \
-                            @types/react \
-                            jest-environment-jsdom \
-                            --no-audit
-
-                        # Create next.config.js
-                        cat << 'EOF' > next.config.js
+                    # Update next.config.js
+                    cat > next.config.js << 'EOF'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
@@ -252,19 +239,16 @@ const nextConfig = {
         // your project has ESLint errors.
         ignoreDuringBuilds: true,
     },
-    // Increase build memory limit
     experimental: {
-        turbotrace: {
-            memoryLimit: 4096
-        }
+        // Remove turbotrace config
     }
 };
 
 module.exports = nextConfig;
 EOF
 
-                        # Create jest.config.js
-                        cat << 'EOF' > jest.config.js
+                    # Create jest.config.js
+                    cat << 'EOF' > jest.config.js
 module.exports = {
     testEnvironment: 'jsdom',
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
@@ -279,27 +263,27 @@ module.exports = {
 };
 EOF
 
-                        # Create jest.setup.js
-                        cat << 'EOF' > jest.setup.js
+                    # Create jest.setup.js
+                    cat << 'EOF' > jest.setup.js
 import '@testing-library/jest-dom';
 EOF
 
-                        # Install React and Next.js dependencies
-                        npm install --save \
-                            next@latest \
-                            next-auth \
-                            react@18.2.0 \
-                            react-dom@18.2.0 \
-                            @heroicons/react \
-                            @headlessui/react \
-                            --no-audit
+                    # Install React and Next.js dependencies
+                    npm install --save \
+                        next@latest \
+                        next-auth \
+                        react@18.2.0 \
+                        react-dom@18.2.0 \
+                        @heroicons/react \
+                        @headlessui/react \
+                        --no-audit
 
-                        # Install remaining dependencies
-                        npm install --legacy-peer-deps --no-audit --verbose
+                    # Install remaining dependencies
+                    npm install --legacy-peer-deps --no-audit --verbose
 
-                        # Create tsconfig.json if it doesn't exist
-                        if [ ! -f "tsconfig.json" ]; then
-                            cat << 'EOF' > tsconfig.json
+                    # Create tsconfig.json if it doesn't exist
+                    if [ ! -f "tsconfig.json" ]; then
+                        cat << 'EOF' > tsconfig.json
 {
     "compilerOptions": {
         "target": "es5",
@@ -325,10 +309,10 @@ EOF
     "exclude": ["node_modules"]
 }
 EOF
-                        fi
+                    fi
 
-                        # Create .npmrc to disable audit
-                        echo "audit=false" >> .npmrc
+                    # Create .npmrc to disable audit
+                    echo "audit=false" >> .npmrc
                     '''
                 }
             }
