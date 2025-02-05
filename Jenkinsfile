@@ -91,8 +91,106 @@ pipeline {
             steps {
                 dir('FA-frontend') {
                     sh '''
-                        # Create required directories
-                        mkdir -p src/contexts src/components src/app/dashboard/users src/app/settings/email-templates __tests__
+                        # Install additional dependencies
+                        npm install --save bcryptjs @types/bcryptjs
+                        
+                        # Create auth types
+                        mkdir -p src/types
+                        cat > src/types/auth.d.ts << 'EOF'
+declare module 'next-auth' {
+    interface User {
+        id: string;
+        role: string;
+        // Add other user properties
+    }
+    
+    interface Session {
+        user: {
+            id: string;
+            role: string;
+            name?: string | null;
+            email?: string | null;
+            image?: string | null;
+        }
+    }
+}
+
+declare module 'next-auth/jwt' {
+    interface JWT {
+        id: string;
+        role: string;
+    }
+}
+EOF
+
+                        # Create API client with auth
+                        cat > src/lib/api.ts << 'EOF'
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+});
+
+api.auth = {
+    login: async (email: string, password: string) => {
+        const response = await api.post('/auth/login', { email, password });
+        return response.data;
+    }
+};
+
+export { api };
+EOF
+
+                        # Update auth route
+                        mkdir -p src/app/api/auth/[...nextauth]
+                        cat > src/app/api/auth/[...nextauth]/route.ts << 'EOF'
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { compare } from 'bcryptjs';
+import { api } from "@/lib/api";
+
+const handler = NextAuth({
+    providers: [
+        CredentialsProvider({
+            name: "Credentials",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" }
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    throw new Error('Missing credentials');
+                }
+
+                try {
+                    const user = await api.auth.login(credentials.email, credentials.password);
+                    return user;
+                } catch (error) {
+                    throw new Error('Invalid credentials');
+                }
+            }
+        })
+    ],
+    callbacks: {
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                token.role = user.role;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user) {
+                session.user.id = token.id;
+                session.user.role = token.role;
+            }
+            return session;
+        }
+    }
+});
+
+export { handler as GET, handler as POST };
+EOF
 
                         # Create AuthContext and Provider
                         cat > src/contexts/AuthContext.tsx << 'EOF'
