@@ -600,7 +600,7 @@ EOF
                     nodejs(nodeJSInstallationName: 'NodeJS 18') {
                         script {
                             try {
-                                sh '''
+                                sh '''#!/bin/bash
                                     # Run TypeScript compiler with error reporting
                                     npx tsc --noEmit --pretty || {
                                         echo "TypeScript errors found, but continuing due to ignoreBuildErrors=true"
@@ -611,17 +611,20 @@ EOF
                                     echo "NEXT_PUBLIC_API_URL=https://your-api.com" >> .env.production
                                     
                                     # Build with detailed logging
-                                    NODE_OPTIONS="--max-old-space-size=4096" npm run build 2>&1 | tee build.log
-                                    if [ ${PIPESTATUS[0]} -ne 0 ]; then
+                                    export NODE_OPTIONS="--max-old-space-size=4096"
+                                    npm run build > build.log 2>&1
+                                    BUILD_EXIT_CODE=$?
+                                    cat build.log
+                                    
+                                    if [ $BUILD_EXIT_CODE -ne 0 ]; then
                                         echo "Build failed. Check build.log for details"
-                                        cat build.log
                                         exit 1
                                     fi
                                 '''
                             } catch (err) {
                                 // Archive both build and TypeScript error logs
-                                sh '''
-                                    tsc --noEmit --pretty > typescript-errors.log 2>&1 || true
+                                sh '''#!/bin/bash
+                                    npx tsc --noEmit --pretty > typescript-errors.log 2>&1 || true
                                 '''
                                 archiveArtifacts artifacts: '''
                                     build.log,
