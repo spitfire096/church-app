@@ -642,31 +642,16 @@ EOF
             steps {
                 dir('FA-frontend') {
                     withSonarQubeEnv('SonarQube') {
-                        sh """#!/bin/bash
-                            # Test SonarQube connection first
-                            if ! curl -f -s -m 10 http://34.207.153.4:9000/api/system/status; then
-                                echo "Cannot connect to SonarQube server. Please check if it's running and accessible."
-                                exit 1
-                            fi
-
-                            ${tool('SonarScanner')}/bin/sonar-scanner \
-                            -Dsonar.projectKey=church-app-frontend \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://34.207.153.4:9000 \
-                            -Dsonar.login=\${SONAR_TOKEN} \
-                            -Dsonar.ws.timeout=300 \
-                            -Dsonar.projectVersion=\${BUILD_NUMBER} \
-                            -Dsonar.sourceEncoding=UTF-8 \
-                            -Dsonar.javascript.node.maxspace=4096 \
-                            -Dsonar.nodejs.executable=\$(which node) \
-                            -Dsonar.coverage.exclusions=node_modules/**,coverage/**,.next/**
+                        sh """
+                            ${tool('SonarScanner')}/bin/sonar-scanner \\
+                            -Dsonar.projectKey=church-app-frontend \\
+                            -Dsonar.sources=. \\
+                            -Dsonar.host.url=http://34.207.153.4:9000 \\
+                            -Dsonar.login=\${SONAR_TOKEN} \\
+                            -Dsonar.java.binaries=. \\
+                            -Dsonar.nodejs.executable=\$(which node)
                         """
                     }
-                }
-            }
-            post {
-                failure {
-                    echo "SonarQube Analysis failed. Check if SonarQube server is accessible at http://34.207.153.4:9000"
                 }
             }
         }
