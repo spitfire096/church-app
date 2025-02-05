@@ -94,10 +94,10 @@ pipeline {
                         # Create required directories
                         mkdir -p src/contexts src/components src/app/dashboard/users src/app/settings/email-templates __tests__
 
-                        # Create AuthContext
+                        # Create AuthContext and Provider
                         cat > src/contexts/AuthContext.tsx << 'EOF'
 "use client";
-import { createContext, useContext } from 'react';
+import { createContext, useContext, ReactNode, useState } from 'react';
 
 interface AuthContextType {
     user: any;
@@ -106,6 +106,25 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+    const [user, setUser] = useState<any>(null);
+
+    const login = async (credentials: any) => {
+        // Implement login logic here
+        setUser({ id: 1, name: 'Test User' });
+    };
+
+    const logout = () => {
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -116,6 +135,31 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
+EOF
+
+                        # Update layout.tsx to include AuthProvider
+                        cat > src/app/layout.tsx << 'EOF'
+import { Metadata } from "next";
+import { AuthProvider } from "@/contexts/AuthContext";
+
+export const metadata: Metadata = {
+    title: "FA Frontend",
+    description: "FA Frontend Application",
+};
+
+export default function RootLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return (
+        <html lang="en">
+            <body>
+                <AuthProvider>{children}</AuthProvider>
+            </body>
+        </html>
+    );
+}
 EOF
 
                         # Create Editor component
@@ -180,6 +224,7 @@ EOF
                         # Fix layout.tsx metadata
                         cat > src/app/layout.tsx << 'EOF'
 import { Metadata } from "next";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
     title: "FA Frontend",
@@ -193,7 +238,9 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body>
+                <AuthProvider>{children}</AuthProvider>
+            </body>
         </html>
     );
 }
