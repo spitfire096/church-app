@@ -113,8 +113,8 @@ export default function Home() {
         // Add semicolons and proper formatting
         const checkAuth = async () => {
             try {
-                // Example regex with proper termination
-                const validEmail = /^[^@]+@[^@]+\.[^@]+$/;
+                // Using a simpler regex pattern to avoid escaping issues
+                const validEmail = /[^@]+@[^@]+\.[^@]+/;
                 return true;
             } catch (error) {
                 return false;
