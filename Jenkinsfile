@@ -91,11 +91,20 @@ pipeline {
             steps {
                 dir('FA-frontend') {
                     sh '''
-                        # Install additional dependencies
-                        npm install --save bcryptjs @types/bcryptjs
-                        
-                        # Create auth types
+                        # Create all required directories first
                         mkdir -p src/types
+                        mkdir -p src/lib
+                        mkdir -p src/contexts
+                        mkdir -p src/components
+                        mkdir -p src/app/api/auth/[...nextauth]
+                        mkdir -p src/app/dashboard/users
+                        mkdir -p src/app/settings/email-templates
+                        mkdir -p __tests__
+
+                        # Install dependencies
+                        npm install --save bcryptjs @types/bcryptjs
+
+                        # Create auth types
                         cat > src/types/auth.d.ts << 'EOF'
 declare module 'next-auth' {
     interface User {
@@ -123,7 +132,7 @@ declare module 'next-auth/jwt' {
 }
 EOF
 
-                        # Create API client with auth
+                        # Create API client
                         cat > src/lib/api.ts << 'EOF'
 import axios from 'axios';
 
@@ -141,8 +150,7 @@ api.auth = {
 export { api };
 EOF
 
-                        # Update auth route
-                        mkdir -p src/app/api/auth/[...nextauth]
+                        # Create auth route
                         cat > src/app/api/auth/[...nextauth]/route.ts << 'EOF'
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -192,7 +200,7 @@ const handler = NextAuth({
 export { handler as GET, handler as POST };
 EOF
 
-                        # Create AuthContext and Provider
+                        # Create AuthContext
                         cat > src/contexts/AuthContext.tsx << 'EOF'
 "use client";
 import { createContext, useContext, ReactNode, useState } from 'react';
