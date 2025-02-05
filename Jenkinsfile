@@ -101,7 +101,7 @@ pipeline {
 
                         # Create proper index page with TypeScript and JSX
                         cat > src/app/page.tsx << 'EOF'
-"use client";
+"use client";  // This must be the first line
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -139,6 +139,44 @@ export default function Home() {
                 </div>
             </div>
         </div>
+    );
+}
+EOF
+
+                    # Create dashboard users page
+                    mkdir -p src/app/dashboard/users
+                    cat > src/app/dashboard/users/page.tsx << 'EOF'
+"use client";
+
+import { useState, useEffect } from 'react';
+import DashboardLayout from '@/app/components/DashboardLayout';
+import { api } from '@/lib/api';
+
+export default function UsersPage() {
+    const [users, setUsers] = useState([]);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const response = await api.get('/users');
+                setUsers(response.data);
+            } catch (error) {
+                console.error('Failed to fetch users:', error);
+            }
+        };
+
+        fetchUsers();
+    }, []);
+
+    return (
+        <DashboardLayout>
+            <div className="p-4">
+                <h1 className="text-2xl font-bold mb-4">Users</h1>
+                <div className="bg-white shadow rounded-lg">
+                    {/* User list content */}
+                </div>
+            </div>
+        </DashboardLayout>
     );
 }
 EOF
