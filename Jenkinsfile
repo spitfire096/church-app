@@ -91,17 +91,24 @@ pipeline {
             steps {
                 dir('FA-frontend') {
                     sh '''
-                        # Remove old pages directory if it exists
+                        # Force remove pages directory and its contents
                         rm -rf src/pages
-
-                        # Debug: Check if pages directory is really gone
+                        git rm -rf src/pages || true
+                        
+                        # Clean any git-ignored files that might be causing issues
+                        git clean -fdx src/
+                        
+                        # Verify removal
                         if [ -d "src/pages" ]; then
-                            echo "WARNING: src/pages still exists"
+                            echo "ERROR: Failed to remove src/pages directory"
                             ls -la src/pages
+                            exit 1
                         fi
 
-                        # Create all required directories first
+                        # Create app directory structure
                         mkdir -p src/app
+                        
+                        # Create all required directories first
                         mkdir -p src/types
                         mkdir -p src/lib
                         mkdir -p src/contexts
