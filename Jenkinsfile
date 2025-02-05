@@ -401,6 +401,45 @@ EOF
 
                         # Add "use client" directive to client components
                         find src/app -type f -name "*.tsx" ! -name "layout.tsx" -exec sed -i '1i"use client";' {} \\;
+
+                        # Create verify-email page with Suspense
+                        cat > src/app/verify-email/page.tsx << 'EOF'
+"use client";
+import { Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+
+function VerifyEmailContent() {
+    const searchParams = useSearchParams();
+    const token = searchParams.get('token');
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="max-w-md w-full space-y-8 p-8 bg-white shadow rounded">
+                <h2 className="text-center text-3xl font-extrabold text-gray-900">
+                    Email Verification
+                </h2>
+                <p className="text-center text-gray-600">
+                    {token 
+                        ? "Verifying your email..."
+                        : "No verification token found. Please check your email link."}
+                </p>
+            </div>
+        </div>
+    );
+}
+
+export default function VerifyEmail() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <p>Loading...</p>
+            </div>
+        }>
+            <VerifyEmailContent />
+        </Suspense>
+    );
+}
+EOF
                     '''
                 }
             }
