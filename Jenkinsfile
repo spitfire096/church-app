@@ -55,8 +55,20 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
+                            # Create .npmrc with correct auth configuration
                             echo "registry=http://54.234.80.81:8081/repository/npm-group/" > .npmrc
                             echo "//54.234.80.81:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            echo "strict-ssl=false" >> .npmrc
+                            echo "legacy-peer-deps=true" >> .npmrc
+                            echo "always-auth=true" >> .npmrc
+                            
+                            # Copy to project directories
+                            cp .npmrc FA-frontend/.npmrc
+                            cp .npmrc FA-backend/.npmrc
+                            
+                            # Fix npm config
+                            npm config set registry http://54.234.80.81:8081/repository/npm-group/
+                            npm config set //54.234.80.81:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
                         """
                     }
                 }
