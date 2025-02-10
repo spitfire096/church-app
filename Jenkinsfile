@@ -58,6 +58,7 @@ pipeline {
                             # Create .npmrc with correct auth configuration
                             echo "registry=http://52.91.22.53:8081/repository/npm-group/" > .npmrc
                             echo "//52.91.22.53:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            echo "//52.91.22.53:8081/repository/npm-group/:email=admin@example.com" >> .npmrc
                             echo "strict-ssl=false" >> .npmrc
                             echo "legacy-peer-deps=true" >> .npmrc
                             echo "always-auth=true" >> .npmrc
@@ -69,6 +70,10 @@ pipeline {
                             # Fix npm config
                             npm config set registry http://52.91.22.53:8081/repository/npm-group/
                             npm config set //52.91.22.53:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
+                            npm config set //52.91.22.53:8081/repository/npm-group/:email admin@example.com
+                            
+                            # Verify npm configuration
+                            npm config list
                         """
                     }
                 }
