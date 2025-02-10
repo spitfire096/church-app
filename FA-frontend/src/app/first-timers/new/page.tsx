@@ -73,7 +73,20 @@ export default function NewFirstTimerPage() {
         throw new Error('Failed to create first timer');
       }
 
+      // Show success message
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded shadow-lg';
+      successMessage.textContent = 'First timer added successfully!';
+      document.body.appendChild(successMessage);
+      
+      // Remove message after 3 seconds
+      setTimeout(() => {
+        successMessage.remove();
+      }, 3000);
+
+      // Navigate back to first timers list
       router.push('/first-timers');
+      router.refresh(); // Force refresh the page data
     } catch (error) {
       console.error('Error creating first timer:', error);
       setError('Failed to create first timer. Please try again.');

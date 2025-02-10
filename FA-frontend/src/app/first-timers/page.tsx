@@ -49,6 +49,7 @@ export default function FirstTimersPage() {
     dateTo: '',
     status: 'all',
   });
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchFirstTimers = async () => {
     try {
@@ -58,6 +59,7 @@ export default function FirstTimersPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        cache: 'no-store'
       });
 
       if (!response.ok) {
@@ -83,7 +85,7 @@ export default function FirstTimersPage() {
     }
 
     fetchFirstTimers();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, refreshKey]);
 
   const handleFilterChange = (name: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [name]: value }));
@@ -133,6 +135,10 @@ export default function FirstTimersPage() {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const refreshData = () => {
+    setRefreshKey(prev => prev + 1);
   };
 
   if (authLoading || loading) {
