@@ -19,8 +19,18 @@ interface FirstTimer {
   lastName: string;
   email: string;
   phone: string;
+  gender: string;
+  postalCode: string;
+  isStudent: boolean;
+  studentDetails?: string;
+  isBornAgain: boolean;
+  bornAgainDate?: string;
+  isWaterBaptized: boolean;
+  waterBaptismDate?: string;
+  prayerRequest: string;
   serviceDate: string;
   status: string;
+  notes?: string;
 }
 
 interface Filters {

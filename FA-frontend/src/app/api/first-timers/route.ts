@@ -1,47 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Mock database
+let mockFirstTimers = [
+  {
+    id: 1,
+    firstName: "John",
+    lastName: "Doe",
+    email: "john@example.com",
+    phone: "123-456-7890",
+    gender: "male",
+    postalCode: "12345",
+    isStudent: false,
+    isBornAgain: true,
+    bornAgainDate: "2020-01-01",
+    isWaterBaptized: true,
+    waterBaptismDate: "2020-02-01",
+    prayerRequest: "Prayer for family",
+    serviceDate: "2024-03-17",
+    status: "new"
+  }
+];
+
 export const dynamic = 'force-dynamic'; // Disable static optimization
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Add CORS headers
-    const headers = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Content-Type': 'application/json',
-    };
-
-    // Mock data
-    const mockFirstTimers = [
-      {
-        id: 1,
-        firstName: "John",
-        lastName: "Doe",
-        email: "john@example.com",
-        phone: "123-456-7890",
-        serviceDate: "2024-03-17",
-        status: "new"
-      },
-      {
-        id: 2,
-        firstName: "Jane",
-        lastName: "Smith",
-        email: "jane@example.com",
-        phone: "098-765-4321",
-        serviceDate: "2024-03-17",
-        status: "contacted"
-      }
-    ];
-
-    return new NextResponse(JSON.stringify(mockFirstTimers), {
+    return NextResponse.json(mockFirstTimers, {
       status: 200,
-      headers
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'application/json',
+      }
     });
   } catch (error) {
     console.error('API Error:', error);
-    return new NextResponse(
-      JSON.stringify({ message: 'Internal server error' }),
+    return NextResponse.json(
+      { message: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -51,12 +45,23 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     
-    // Mock successful creation
-    return NextResponse.json({ 
-      ...data,
+    // Create new first timer with all fields
+    const newFirstTimer = {
       id: Date.now(),
+      ...data,
       status: 'new'
-    }, { status: 201 });
+    };
+
+    // Add to mock database
+    mockFirstTimers = [...mockFirstTimers, newFirstTimer];
+    
+    return NextResponse.json(newFirstTimer, { 
+      status: 201,
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'application/json',
+      }
+    });
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json(
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle OPTIONS request for CORS
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
