@@ -92,6 +92,7 @@ pipeline {
                 dir('FA-frontend') {
                     sh '''
                         # Install dependencies with specific configuration
+                        npm install --save next-auth@latest --legacy-peer-deps
                         npm install --legacy-peer-deps
 
                         # Clear cache and previous builds

@@ -14,6 +14,10 @@ const nextConfig = {
             '@': './src'
         };
         return config;
+    },
+    // Add auth configuration
+    auth: {
+        providers: ['credentials']
     }
 };
 

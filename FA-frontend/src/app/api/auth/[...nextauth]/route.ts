@@ -1,7 +1,5 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { compare } from 'bcryptjs';
-import { api } from '@/lib/api';
 
 const handler = NextAuth({
   providers: [
@@ -12,40 +10,41 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Please enter an email and password');
-        }
-
         try {
-          const user = await api.auth.login(credentials.email, credentials.password);
-          return user;
+          // Mock authentication - replace with actual API call
+          if (credentials?.email === 'admin@example.com' && credentials?.password === 'password') {
+            return {
+              id: '1',
+              email: 'admin@example.com',
+              name: 'Admin User',
+              role: 'admin'
+            };
+          }
+          return null;
         } catch (error) {
-          throw new Error('Invalid email or password');
+          console.error('Auth error:', error);
+          return null;
         }
       }
     })
   ],
   pages: {
     signIn: '/login',
+    error: '/login',
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
         token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
+      if (session?.user) {
         session.user.role = token.role;
       }
       return session;
     }
-  },
-  session: {
-    strategy: 'jwt',
   }
 });
 
