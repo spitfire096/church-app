@@ -56,8 +56,8 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
                             # Create .npmrc with correct auth configuration
-                            echo "registry=http://54.234.80.81:8081/repository/npm-group/" > .npmrc
-                            echo "//54.234.80.81:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            echo "registry=http://52.91.22.53:8081/repository/npm-group/" > .npmrc
+                            echo "//52.91.22.53:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
                             echo "strict-ssl=false" >> .npmrc
                             echo "legacy-peer-deps=true" >> .npmrc
                             echo "always-auth=true" >> .npmrc
@@ -67,8 +67,8 @@ pipeline {
                             cp .npmrc FA-backend/.npmrc
                             
                             # Fix npm config
-                            npm config set registry http://54.234.80.81:8081/repository/npm-group/
-                            npm config set //54.234.80.81:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
+                            npm config set registry http://52.91.22.53:8081/repository/npm-group/
+                            npm config set //52.91.22.53:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
                         """
                     }
                 }
@@ -79,9 +79,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        curl -v http://54.234.80.81:8081/repository/npm-group/
-                        curl -v http://54.234.80.81:8081/
-                        npm config set registry http://54.234.80.81:8081/repository/npm-group/
+                        curl -v http://52.91.22.53:8081/repository/npm-group/
+                        curl -v http://52.91.22.53:8081/
+                        npm config set registry http://52.91.22.53:8081/repository/npm-group/
                     '''
                 }
             }
@@ -361,8 +361,8 @@ EOF
                 dir('FA-frontend') {
                     // Test SonarQube connectivity first
                     sh '''
-                        curl -v http://34.207.153.4:9000/api/v2/analysis/version
-                        nc -zv 34.207.153.4 9000
+                        curl -v http://54.221.130.28:9000/api/v2/analysis/version
+                        nc -zv 54.221.130.28 9000
                     '''
                     
                     withSonarQubeEnv('SonarQube') {
@@ -370,7 +370,7 @@ EOF
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
                             -Dsonar.projectKey=church-app-frontend \\
                             -Dsonar.sources=. \\
-                            -Dsonar.host.url=http://34.207.153.4:9000 \\
+                            -Dsonar.host.url=http://54.221.130.28:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
                             -Dsonar.java.binaries=. \\
                             -Dsonar.nodejs.executable=\$(which node)
