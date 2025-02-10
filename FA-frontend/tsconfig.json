@@ -22,8 +22,12 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "target": "ES2017",
+    "esModuleInterop": true
   },
   "include": [
     "next-env.d.ts",
