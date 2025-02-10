@@ -11,6 +11,15 @@ interface FirstTimerFormData {
   lastName: string;
   email: string;
   phone: string;
+  gender: 'male' | 'female' | 'prefer_not_to_say';
+  postalCode: string;
+  isStudent: boolean;
+  studentDetails?: string;
+  isBornAgain: boolean;
+  bornAgainDate?: string;
+  isWaterBaptized: boolean;
+  waterBaptismDate?: string;
+  prayerRequest: string;
   serviceDate: string;
   notes: string;
 }
@@ -25,6 +34,15 @@ export default function NewFirstTimerPage() {
     lastName: '',
     email: '',
     phone: '',
+    gender: 'prefer_not_to_say',
+    postalCode: '',
+    isStudent: false,
+    studentDetails: '',
+    isBornAgain: false,
+    bornAgainDate: '',
+    isWaterBaptized: false,
+    waterBaptismDate: '',
+    prayerRequest: '',
     serviceDate: new Date().toISOString().split('T')[0],
     notes: ''
   });
@@ -145,6 +163,166 @@ export default function NewFirstTimerPage() {
                           value={formData.phone}
                           onChange={handleChange}
                           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                      </div>
+
+                      <div className="col-span-6 sm:col-span-3">
+                        <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+                          Gender
+                        </label>
+                        <select
+                          id="gender"
+                          name="gender"
+                          value={formData.gender}
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        >
+                          <option value="prefer_not_to_say">Prefer not to say</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                        </select>
+                      </div>
+
+                      <div className="col-span-6 sm:col-span-3">
+                        <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700">
+                          Postal Code
+                        </label>
+                        <input
+                          type="text"
+                          name="postalCode"
+                          id="postalCode"
+                          value={formData.postalCode}
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                      </div>
+
+                      <div className="col-span-6">
+                        <div className="flex items-center">
+                          <input
+                            id="isStudent"
+                            name="isStudent"
+                            type="checkbox"
+                            checked={formData.isStudent}
+                            onChange={(e) => handleChange({
+                              target: {
+                                name: 'isStudent',
+                                value: e.target.checked
+                              }
+                            } as any)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <label htmlFor="isStudent" className="ml-2 block text-sm text-gray-700">
+                            Are you a student?
+                          </label>
+                        </div>
+                      </div>
+
+                      {formData.isStudent && (
+                        <div className="col-span-6">
+                          <label htmlFor="studentDetails" className="block text-sm font-medium text-gray-700">
+                            Student Details
+                          </label>
+                          <input
+                            type="text"
+                            name="studentDetails"
+                            id="studentDetails"
+                            value={formData.studentDetails}
+                            onChange={handleChange}
+                            placeholder="School/Institution and Course"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          />
+                        </div>
+                      )}
+
+                      <div className="col-span-6 sm:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Are you born again?
+                        </label>
+                        <div className="mt-1 space-y-2">
+                          <select
+                            name="isBornAgain"
+                            value={formData.isBornAgain.toString()}
+                            onChange={(e) => handleChange({
+                              target: {
+                                name: 'isBornAgain',
+                                value: e.target.value === 'true'
+                              }
+                            } as any)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          >
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                          </select>
+                          
+                          {formData.isBornAgain && (
+                            <div className="mt-2">
+                              <label htmlFor="bornAgainDate" className="block text-sm font-medium text-gray-700">
+                                When did you get born again?
+                              </label>
+                              <input
+                                type="date"
+                                name="bornAgainDate"
+                                id="bornAgainDate"
+                                value={formData.bornAgainDate}
+                                onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="col-span-6 sm:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Are you baptized in water?
+                        </label>
+                        <div className="mt-1 space-y-2">
+                          <select
+                            name="isWaterBaptized"
+                            value={formData.isWaterBaptized.toString()}
+                            onChange={(e) => handleChange({
+                              target: {
+                                name: 'isWaterBaptized',
+                                value: e.target.value === 'true'
+                              }
+                            } as any)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          >
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                          </select>
+                          
+                          {formData.isWaterBaptized && (
+                            <div className="mt-2">
+                              <label htmlFor="waterBaptismDate" className="block text-sm font-medium text-gray-700">
+                                When were you baptized?
+                              </label>
+                              <input
+                                type="date"
+                                name="waterBaptismDate"
+                                id="waterBaptismDate"
+                                value={formData.waterBaptismDate}
+                                onChange={handleChange}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="col-span-6">
+                        <label htmlFor="prayerRequest" className="block text-sm font-medium text-gray-700">
+                          Prayer Request
+                        </label>
+                        <textarea
+                          name="prayerRequest"
+                          id="prayerRequest"
+                          rows={3}
+                          value={formData.prayerRequest}
+                          onChange={handleChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          placeholder="Share your prayer request..."
                         />
                       </div>
 
