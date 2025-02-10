@@ -247,13 +247,21 @@ pipeline {
         stage('Backend SonarQube Analysis') {
             steps {
                 dir('FA-backend') {
+                    // Test SonarQube connectivity first
+                    sh '''
+                        curl -v http://54.221.130.28:9000/api/v2/analysis/version
+                        nc -zv 54.221.130.28 9000
+                    '''
+                    
                     withSonarQubeEnv('SonarQube') {
                         sh """
-                            ${tool('SonarScanner')}/bin/sonar-scanner \
-                            -Dsonar.projectKey=church-app-backend \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://34.207.153.4:9000 \
-                            -Dsonar.login=\${SONAR_TOKEN}
+                            ${tool('SonarScanner')}/bin/sonar-scanner \\
+                            -Dsonar.projectKey=church-app-backend \\
+                            -Dsonar.sources=. \\
+                            -Dsonar.host.url=http://54.221.130.28:9000 \\
+                            -Dsonar.login=\${SONAR_TOKEN} \\
+                            -Dsonar.java.binaries=. \\
+                            -Dsonar.nodejs.executable=\$(which node)
                         """
                     }
                 }
