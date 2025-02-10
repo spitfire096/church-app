@@ -95,6 +95,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/login');
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated }}>
       {children}
