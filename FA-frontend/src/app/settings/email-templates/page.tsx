@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import dynamic from 'next/dynamic';
+import Editor from '@/components/Editor';
 
 const Editor = dynamic(() => import('@/components/Editor'), { ssr: false });
 

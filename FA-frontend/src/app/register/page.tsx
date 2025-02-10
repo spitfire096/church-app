@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/app/contexts/AuthContext';
 import Link from 'next/link';
 
 export default function RegisterPage() {
