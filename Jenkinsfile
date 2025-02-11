@@ -322,6 +322,41 @@ pipeline {
                 }
             }
         }
+        
+        stage('Upload to Nexus') {
+            steps {
+                script {
+                    def frontendArtifact = "FA-frontend-${BUILD_NUMBER}.zip"
+                    def backendArtifact = "FA-backend-${BUILD_NUMBER}.zip"
+                    
+                    // Package the applications
+                    sh """
+                        cd FA-frontend && zip -r ../${frontendArtifact} . -x "node_modules/*" "coverage/*" ".next/*"
+                        cd ../FA-backend && zip -r ../${backendArtifact} . -x "node_modules/*" "coverage/*" "dist/*"
+                    """
+                    
+                    // Upload to Nexus
+                    withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh """
+                            # Upload Frontend artifact
+                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${frontendArtifact} \
+                                "http://52.91.22.53:8081/repository/church-app-releases/frontend/${frontendArtifact}"
+                            
+                            # Upload Backend artifact
+                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${backendArtifact} \
+                                "http://52.91.22.53:8081/repository/church-app-releases/backend/${backendArtifact}"
+                            
+                            # Clean up zip files
+                            rm ${frontendArtifact} ${backendArtifact}
+                        """
+                    }
+                    
+                    // Update Slack message to include artifact information
+                    env.FRONTEND_ARTIFACT_URL = "http://52.91.22.53:8081/repository/church-app-releases/frontend/${frontendArtifact}"
+                    env.BACKEND_ARTIFACT_URL = "http://52.91.22.53:8081/repository/church-app-releases/backend/${backendArtifact}"
+                }
+            }
+        }
     }
     
     post {
@@ -344,6 +379,9 @@ pipeline {
                     *Docker Images:*
                     - Frontend: church-appimg:frontend-${BUILD_NUMBER}
                     - Backend: church-appimg:backend-${BUILD_NUMBER}
+                    *Artifacts:*
+                    - Frontend: ${env.FRONTEND_ARTIFACT_URL}
+                    - Backend: ${env.BACKEND_ARTIFACT_URL}
                     *More Info:* ${env.BUILD_URL}
                 """
             )
