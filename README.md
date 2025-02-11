@@ -1,5 +1,4 @@
-# church-app
-# wsf-wcito-devops Visitor Management System
+# First Assembly Church Visitor Management System
 
 A modern web application for managing first-time visitors and follow-ups, built with Next.js and Node.js.
 
@@ -14,6 +13,9 @@ A modern web application for managing first-time visitors and follow-ups, built 
 - **Data Fetching**: Native fetch API
 - **Form Handling**: React Hook Form
 - **Components**: Custom components with accessibility features
+- **CI/CD**: Jenkins Pipeline
+- **Quality**: SonarQube
+- **Package Registry**: Nexus Repository
 
 ### Backend
 - **Runtime**: [Node.js](https://nodejs.org/)
@@ -30,13 +32,20 @@ A modern web application for managing first-time visitors and follow-ups, built 
 - Node.js 18.x or later
 - npm or yarn
 - MongoDB instance
+- Jenkins (for CI/CD)
+- SonarQube (for code quality)
+- Nexus Repository (for package management)
 
 ### Environment Setup
 
-#### Frontend (.env.local)
+Create .env.local in the frontend directory:
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key
+```
 
-#### Backend (.env)
-
+Create .env in the backend directory:
 ```bash
 PORT=3001
 MONGODB_URI=mongodb://localhost:27017/first-assembly
@@ -44,135 +53,74 @@ JWT_SECRET=your-secret-key
 NODE_ENV=development
 ```
 
-### Installation
+### Installation & Development
 
 1. Clone the repository
 ```bash
 git clone https://github.com/spitfire096/church-app.git
-cd first-assembly
+cd church-app
 ```
 
 2. Install Frontend Dependencies
 ```bash
 cd FA-frontend
 npm install
+npm run dev
 ```
 
 3. Install Backend Dependencies
 ```bash
 cd ../FA-backend
 npm install
-```
-
-4. Start Development Servers
-
-Frontend:
-```bash
-cd FA-frontend
 npm run dev
 ```
 
-Backend:
-```bash
-cd FA-backend
-npm run dev
-```
+## 📦 Features
 
-## 🏛️ Project Structure
+- **First Timer Management**
+  - Registration with detailed information
+  - Gender tracking
+  - Postal code for location analysis
+  - Student status tracking
+  - Spiritual journey tracking (born again, water baptism)
+  - Prayer request handling
 
-### Frontend (FA-frontend)
-```
-├── src/
-│   ├── app/                 # Next.js app router pages
-│   ├── components/          # Reusable components
-│   ├── contexts/            # React contexts
-│   ├── lib/                 # Utility functions
-│   └── types/              # TypeScript types
-├── public/                  # Static assets
-└── tailwind.config.js      # Tailwind configuration
-```
+- **Follow-up System**
+  - Automated task creation
+  - Status tracking
+  - Email notifications
+  - Progress monitoring
 
-### Backend (FA-backend)
-```
-├── src/
-│   ├── controllers/        # Route controllers
-│   ├── models/            # Database models
-│   ├── routes/            # API routes
-│   ├── middleware/        # Custom middleware
-│   └── utils/            # Utility functions
-├── config/               # Configuration files
-└── tests/               # Test files
-```
+- **Dashboard**
+  - Real-time statistics
+  - Recent activities
+  - Pending tasks
+  - Performance metrics
 
-## 🔐 Authentication
+## 🔄 CI/CD Pipeline
 
-The application uses JWT-based authentication:
-- Tokens are stored in localStorage and HTTP-only cookies
-- Protected routes require valid JWT
-- Automatic token refresh mechanism
-- Role-based access control
+The project uses Jenkins for continuous integration and deployment:
+- Automated builds
+- SonarQube analysis
+- Nexus artifact storage
+- Automated testing
+- Quality gate enforcement
 
-## 🔄 API Routes
+## 📊 Quality Metrics
 
-### Authentication
-- `POST /api/auth/login`
-- `POST /api/auth/register`
-- `POST /api/auth/logout`
-
-### First Timers
-- `GET /api/first-timers`
-- `POST /api/first-timers`
-- `GET /api/first-timers/:id`
-- `PUT /api/first-timers/:id`
-- `DELETE /api/first-timers/:id`
-
-### Follow-ups
-- `GET /api/follow-ups`
-- `POST /api/follow-ups`
-- `PUT /api/follow-ups/:id`
-- `DELETE /api/follow-ups/:id`
-
-## 🧪 Testing
-
-```bash
-# Run frontend tests
-cd FA-frontend
-npm test
-
-# Run backend tests
-cd FA-backend
-npm test
-```
-
-## 📦 Deployment
-
-### Frontend
-The frontend can be deployed to Vercel:
-```bash
-cd FA-frontend
-vercel
-```
-
-### Backend
-The backend can be deployed to any Node.js hosting service:
-1. Build the application: `npm run build`
-2. Start the server: `npm start`
+- SonarQube for code quality analysis
+- Jest for unit testing
+- E2E testing with Cypress
+- Continuous monitoring
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👥 Authors
 
-- https://github.com/spitfire096/church-app.git
-
-## 🙏 Acknowledgments
-
-- Next.js team for the amazing framework
-- Tailwind CSS for the utility-first CSS framework
-- MongoDB team for the robust database
-- All friends in wsf-wcito-devops team
+See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the list of contributors.

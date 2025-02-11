@@ -285,6 +285,43 @@ pipeline {
                 }
             }
         }
+        
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', 
+                                    credentialsId: 'awscreds',
+                                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                        
+                        // Configure AWS CLI for ECR
+                        sh """
+                            aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 522814712595.dkr.ecr.us-east-1.amazonaws.com
+                        """
+                        
+                        // Build and push Frontend Docker image
+                        dir('FA-frontend') {
+                            sh """
+                                docker build -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci .
+                                docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER}
+                                docker tag 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
+                                docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
+                            """
+                        }
+                        
+                        // Build and push Backend Docker image
+                        dir('FA-backend') {
+                            sh """
+                                docker build -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-${BUILD_NUMBER} .
+                                docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-${BUILD_NUMBER}
+                                docker tag 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-${BUILD_NUMBER} 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-latest
+                                docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-latest
+                            """
+                        }
+                    }
+                }
+            }
+        }
     }
     
     post {
@@ -296,9 +333,34 @@ pipeline {
             ''', allowEmptyArchive: true
         }
         success {
+            slackSend(
+                channel: '#devopscicd',
+                color: 'good',
+                message: """
+                    ✅ *Build Successful!*
+                    *Job:* ${env.JOB_NAME}
+                    *Build Number:* ${env.BUILD_NUMBER}
+                    *Duration:* ${currentBuild.durationString}
+                    *Docker Images:*
+                    - Frontend: church-appimg:frontend-${BUILD_NUMBER}
+                    - Backend: church-appimg:backend-${BUILD_NUMBER}
+                    *More Info:* ${env.BUILD_URL}
+                """
+            )
             echo 'Pipeline completed successfully!'
         }
         failure {
+            slackSend(
+                channel: '#devopscicd',
+                color: 'danger',
+                message: """
+                    🚨 *Build Failed!*
+                    *Job:* ${env.JOB_NAME}
+                    *Build Number:* ${env.BUILD_NUMBER}
+                    *Duration:* ${currentBuild.durationString}
+                    *More Info:* ${env.BUILD_URL}
+                """
+            )
             echo 'Pipeline failed! Check the logs for details.'
         }
         cleanup {
