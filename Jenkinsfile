@@ -9,6 +9,8 @@ pipeline {
         NODE_VERSION = '18'  // Next.js 15 requires Node.js 18+
         NPM_CONFIG_CACHE = "${WORKSPACE}/.npm"
         NPM_CONFIG_USERCONFIG = "${WORKSPACE}/.npmrc"
+        CLUSTER_NAME = 'church-app-cluster'
+        SERVICE_NAME = 'church-app-service'
     }
     
     // Tool configurations
@@ -323,10 +325,16 @@ pipeline {
                             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 522814712595.dkr.ecr.us-east-1.amazonaws.com
                         """
                         
-                        // Build and push Frontend Docker image
+                        // Build and push Frontend Docker image with error handling
                         dir('FA-frontend') {
                             sh """
-                                docker build -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci .
+                                # Build with retries and logging
+                                docker build -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci . || {
+                                    echo "First build attempt failed, retrying with --no-cache..."
+                                    docker build --no-cache -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci .
+                                }
+                                
+                                # Push images if build succeeds
                                 docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER}
                                 docker tag 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
                                 docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
@@ -343,6 +351,72 @@ pipeline {
                             """
                         }
                     }
+                }
+            }
+        }
+        
+        stage('Deploy to ECS') {
+            steps {
+                script {
+                    withAWS(credentials: 'awscreds', region: 'us-east-1') {
+                        // Update ECS task definition
+                        def taskDef = readJSON file: 'task-definition.json'
+                        taskDef.containerDefinitions[0].image = "522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER}"
+                        taskDef.containerDefinitions[1].image = "522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-${BUILD_NUMBER}"
+                        writeJSON file: 'task-definition-new.json', json: taskDef
+
+                        // Register new task definition
+                        def taskDefArn = sh(
+                            script: "aws ecs register-task-definition --cli-input-json file://task-definition-new.json --query 'taskDefinition.taskDefinitionArn' --output text",
+                            returnStdout: true
+                        ).trim()
+
+                        // Update service with new task definition
+                        sh """
+                            aws ecs update-service \
+                                --cluster ${CLUSTER_NAME} \
+                                --service ${SERVICE_NAME} \
+                                --task-definition ${taskDefArn} \
+                                --force-new-deployment
+                        """
+
+                        // Wait for service to stabilize
+                        sh """
+                            aws ecs wait services-stable \
+                                --cluster ${CLUSTER_NAME} \
+                                --services ${SERVICE_NAME}
+                        """
+
+                        // Notify Slack about deployment
+                        slackSend(
+                            channel: '#devopscicd',
+                            color: 'good',
+                            message: """
+                                🚀 *ECS Deployment Successful!*
+                                *Cluster:* ${CLUSTER_NAME}
+                                *Service:* ${SERVICE_NAME}
+                                *Images:*
+                                - Frontend: church-appimg:frontend-${BUILD_NUMBER}
+                                - Backend: church-appimg:backend-${BUILD_NUMBER}
+                                *Task Definition:* ${taskDefArn}
+                            """
+                        )
+                    }
+                }
+            }
+            post {
+                failure {
+                    slackSend(
+                        channel: '#devopscicd',
+                        color: 'danger',
+                        message: """
+                            ❌ *ECS Deployment Failed!*
+                            *Cluster:* ${CLUSTER_NAME}
+                            *Service:* ${SERVICE_NAME}
+                            *Build Number:* ${BUILD_NUMBER}
+                            *Check logs for details:* ${BUILD_URL}console
+                        """
+                    )
                 }
             }
         }
