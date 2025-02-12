@@ -143,9 +143,16 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
-                                    # Install dependencies including TypeScript
-                                    echo "Installing dependencies..."
+                                    # Install core dependencies first
+                                    echo "Installing core dependencies..."
+                                    npm install --save next@14.1.0 react@18.2.0 react-dom@18.2.0
+                                    
+                                    # Install dev dependencies
+                                    echo "Installing dev dependencies..."
                                     npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom jest-sonar-reporter
+                                    
+                                    # Install remaining dependencies
+                                    echo "Installing remaining dependencies..."
                                     npm install --legacy-peer-deps
                                     
                                     # Verify package.json exists and has correct scripts
