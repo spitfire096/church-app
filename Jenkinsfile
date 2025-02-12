@@ -190,13 +190,16 @@ pipeline {
         stage('Frontend SonarQube Analysis') {
             steps {
                 dir('FA-frontend') {
-                    // Run tests with coverage and generate report
+                    // Install dependencies and run tests
                     sh '''
+                        # Install dependencies
+                        npm install --save-dev jest @testing-library/react @testing-library/jest-dom @types/jest jest-environment-jsdom jest-sonar-reporter
+                        
                         # Run tests with coverage
                         npm run test:ci || exit 1  # Fail if tests fail
                         
                         # Verify coverage meets threshold
-                        if ! grep -q '"lines":{"total":.*,"covered":.*,"skipped":0,"pct":70' coverage/coverage-summary.json; then
+                        if ! grep -q '"lines":{"total":.*,"covered":.*,"skipped":0,"pct":80' coverage/coverage-summary.json; then
                             echo "Coverage threshold not met"
                             exit 1
                         fi
