@@ -1,4 +1,4 @@
-'use strict';
+'use client';
 
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/app/components/DashboardLayout';
