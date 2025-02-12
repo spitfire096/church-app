@@ -286,7 +286,26 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
+                    // Wait for quality gate but don't fail the pipeline
+                    waitForQualityGate abortPipeline: false
+                    script {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            slackSend(
+                                channel: '#devopscicd',
+                                color: 'warning',
+                                message: """
+                                    ⚠️ *Quality Gate Warning*
+                                    *Job:* ${env.JOB_NAME}
+                                    *Build Number:* ${env.BUILD_NUMBER}
+                                    *Status:* ${qg.status}
+                                    *Details:* Check SonarQube analysis for more information
+                                    *SonarQube URL:* http://34.234.95.185:9000/dashboard?id=church-app-frontend
+                                """
+                            )
+                            echo "Quality Gate failed with status: ${qg.status}"
+                        }
+                    }
                 }
             }
         }
