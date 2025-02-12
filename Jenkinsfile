@@ -168,18 +168,23 @@ pipeline {
                 dir('FA-frontend') {
                     // Test SonarQube connectivity first
                     sh '''
-                        curl -v http://54.221.130.28:9000/api/v2/analysis/version
-                        nc -zv 54.221.130.28 9000
+                        curl -v http://34.234.95.185:9000/api/v2/analysis/version
+                        nc -zv 34.234.95.185 9000
                     '''
                     
                     withSonarQubeEnv('SonarQube') {
                         sh """
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
                             -Dsonar.projectKey=church-app-frontend \\
-                            -Dsonar.sources=. \\
-                            -Dsonar.host.url=http://54.221.130.28:9000 \\
+                            -Dsonar.sources=src \\
+                            -Dsonar.host.url=http://34.234.95.185:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
-                            -Dsonar.java.binaries=. \\
+                            -Dsonar.sourceEncoding=UTF-8 \\
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
+                            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \\
+                            -Dsonar.test.inclusions=src/**/*.test.tsx,src/**/*.test.ts \\
+                            -Dsonar.coverage.exclusions=src/**/*.test.tsx,src/**/*.test.ts,src/types/**/* \\
+                            -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
                             -Dsonar.nodejs.executable=\$(which node)
                         """
                     }
