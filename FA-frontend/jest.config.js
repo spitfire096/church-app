@@ -39,10 +39,7 @@ const customJestConfig = {
     transformIgnorePatterns: [
         '/node_modules/',
         '^.+\\.module\\.(css|sass|scss)$',
-    ],
-    transform: {
-        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
-    }
+    ]
 }
 
 module.exports = createJestConfig(customJestConfig) 

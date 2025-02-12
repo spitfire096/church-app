@@ -141,7 +141,7 @@ pipeline {
                                     # Clean install dependencies
                                     echo "Cleaning npm cache and node_modules..."
                                     npm cache clean --force
-                                    rm -rf node_modules package-lock.json .next coverage
+                                    rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
                                     # Install dependencies including TypeScript
                                     echo "Installing dependencies..."
