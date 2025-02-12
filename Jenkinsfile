@@ -134,6 +134,10 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
+                                    # Install dependencies including TypeScript
+                                    npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest
+                                    npm install
+                                    
                                     # Add "use client" directive to all component files
                                     FILES_TO_UPDATE=(
                                         "src/app/components/AutomatedEmailSystem.tsx"
@@ -158,13 +162,13 @@ pipeline {
                                         fi
                                     done
 
-                                    # Run tests with coverage
-                                    npm run test:ci || true
-
                                     # Run TypeScript compiler
-                                    npx tsc --noEmit --pretty || {
+                                    npx tsc --noEmit || {
                                         echo "TypeScript errors found, but continuing..."
                                     }
+                                    
+                                    # Run tests
+                                    npm run test:ci || true
                                     
                                     # Build with detailed logging
                                     export NODE_OPTIONS="--max-old-space-size=4096"
