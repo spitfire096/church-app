@@ -143,7 +143,7 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
-                                    # Create a temporary package.json with core dependencies
+                                    # Create a temporary package.json with all dependencies
                                     echo '{
                                         "name": "fa-frontend",
                                         "version": "0.1.0",
@@ -152,32 +152,34 @@ pipeline {
                                             "next": "14.1.0",
                                             "react": "18.2.0",
                                             "react-dom": "18.2.0",
-                                            "next-auth": "4.24.6"
-                                        }
-                                    }' > package.json.tmp
-                                    
-                                    # Install core dependencies first
-                                    echo "Installing core dependencies..."
-                                    mv package.json.tmp package.json
-                                    npm install
-                                    
-                                    # Now add dev dependencies to package.json
-                                    node -e '
-                                        const fs = require("fs");
-                                        const pkg = JSON.parse(fs.readFileSync("package.json"));
-                                        pkg.devDependencies = {
+                                            "next-auth": "4.24.6",
+                                            "@headlessui/react": "^1.7.18",
+                                            "@heroicons/react": "^2.1.1",
+                                            "@tailwindcss/forms": "^0.5.10",
+                                            "axios": "^1.6.7",
+                                            "chart.js": "^4.4.7",
+                                            "react-chartjs-2": "^5.3.0",
+                                            "react-csv": "^2.2.2"
+                                        },
+                                        "devDependencies": {
                                             "@testing-library/jest-dom": "^6.4.2",
                                             "@testing-library/react": "^14.2.1",
                                             "@types/jest": "^29.5.12",
                                             "@types/node": "^20.11.16",
                                             "@types/react": "^18.2.52",
                                             "@types/react-dom": "^18.2.18",
-                                            "typescript": "^5.3.3",
+                                            "@typescript-eslint/eslint-plugin": "6.20.0",
+                                            "@typescript-eslint/parser": "6.20.0",
+                                            "autoprefixer": "^10.4.17",
+                                            "eslint-config-next": "14.2.23",
                                             "jest": "^29.7.0",
                                             "jest-environment-jsdom": "^29.7.0",
-                                            "jest-sonar-reporter": "^2.0.0"
-                                        };
-                                        pkg.scripts = {
+                                            "jest-sonar-reporter": "^2.0.0",
+                                            "postcss": "^8.4.31",
+                                            "tailwindcss": "^3.4.1",
+                                            "typescript": "^5.3.3"
+                                        },
+                                        "scripts": {
                                             "dev": "next dev",
                                             "build": "next build",
                                             "start": "next start",
@@ -185,13 +187,12 @@ pipeline {
                                             "test:watch": "jest --watch",
                                             "test:coverage": "jest --coverage",
                                             "test:ci": "jest --ci --coverage --maxWorkers=2"
-                                        };
-                                        fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
-                                    '
+                                        }
+                                    }' > package.json
                                     
-                                    # Install dev dependencies
-                                    echo "Installing dev dependencies..."
-                                    npm install
+                                    # Install all dependencies
+                                    echo "Installing dependencies..."
+                                    npm install --legacy-peer-deps
                                     
                                     # Display final package.json content
                                     echo "Final package.json contents:"
