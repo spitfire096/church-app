@@ -134,9 +134,24 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
+                                    # Verify we're in the correct directory
+                                    pwd
+                                    ls -la
+                                    
                                     # Install dependencies including TypeScript
+                                    echo "Installing dependencies..."
                                     npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest
                                     npm install
+                                    
+                                    # Verify package.json exists and has correct scripts
+                                    if [ ! -f package.json ]; then
+                                        echo "package.json not found!"
+                                        exit 1
+                                    fi
+                                    
+                                    # Display package.json content
+                                    echo "package.json contents:"
+                                    cat package.json
                                     
                                     # Add "use client" directive to all component files
                                     FILES_TO_UPDATE=(
@@ -162,15 +177,18 @@ pipeline {
                                         fi
                                     done
 
-                                    # Run TypeScript compiler
-                                    npx tsc --noEmit || {
+                                    # Run TypeScript compiler using local installation
+                                    echo "Running TypeScript compiler..."
+                                    ./node_modules/.bin/tsc --noEmit || {
                                         echo "TypeScript errors found, but continuing..."
                                     }
                                     
                                     # Run tests
+                                    echo "Running tests..."
                                     npm run test:ci || true
                                     
                                     # Build with detailed logging
+                                    echo "Building application..."
                                     export NODE_OPTIONS="--max-old-space-size=4096"
                                     NEXT_TELEMETRY_DISABLED=1 npm run build > build.log 2>&1
                                     BUILD_EXIT_CODE=$?
