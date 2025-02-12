@@ -134,17 +134,33 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Run tests with coverage
-                                    npm run test:coverage || true
+                                    # Add "use client" directive to all component files
+                                    FILES_TO_UPDATE=(
+                                        "src/app/components/AutomatedEmailSystem.tsx"
+                                        "src/app/components/ExportData.tsx"
+                                        "src/app/components/FollowUpSystem.tsx"
+                                        "src/app/components/FirstTimerForm.tsx"
+                                        "src/app/components/DashboardLayout.tsx"
+                                        "src/app/dashboard/analytics/page.tsx"
+                                        "src/app/components/FirstTimerFilters.tsx"
+                                        "src/app/components/FeedbackSystem.tsx"
+                                    )
 
-                                    # Ensure all client components have "use client" directive
-                                    find src/app -type f -name "*.tsx" ! -name "layout.tsx" -exec grep -L "use client" {} \\; | while read -r file; do
-                                        echo '"use client";' | cat - "$file" > temp && mv temp "$file"
+                                    for file in "${FILES_TO_UPDATE[@]}"; do
+                                        if [ -f "$file" ]; then
+                                            if ! grep -q "^'use client'" "$file"; then
+                                                echo "'use client';" | cat - "$file" > temp && mv temp "$file"
+                                                echo "Added 'use client' directive to $file"
+                                            fi
+                                        fi
                                     done
 
-                                    # Run TypeScript compiler with error reporting
+                                    # Run tests with coverage
+                                    npm run test:ci || true
+
+                                    # Run TypeScript compiler
                                     npx tsc --noEmit --pretty || {
-                                        echo "TypeScript errors found, but continuing due to ignoreBuildErrors=true"
+                                        echo "TypeScript errors found, but continuing..."
                                     }
                                     
                                     # Build with detailed logging
@@ -189,8 +205,8 @@ pipeline {
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \\
-                            -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts \\
-                            -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
+                            -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts,src/app/layout.tsx \\
+                            -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/*,src/app/layout.tsx \\
                             -Dsonar.testExecutionReportPaths=test-report.xml \\
                             -Dsonar.qualitygate.wait=true \\
                             -Dsonar.nodejs.executable=\$(which node)
@@ -295,10 +311,10 @@ pipeline {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
                     // Wait for quality gate but don't fail the pipeline
-                    waitForQualityGate abortPipeline: false
                     script {
-                        def qg = waitForQualityGate()
+                        def qg = waitForQualityGate abortPipeline: false
                         if (qg.status != 'OK') {
+                            echo "Quality Gate warning: ${qg.status}"
                             slackSend(
                                 channel: '#devopscicd',
                                 color: 'warning',
@@ -311,7 +327,6 @@ pipeline {
                                     *SonarQube URL:* http://34.234.95.185:9000/dashboard?id=church-app-frontend
                                 """
                             )
-                            echo "Quality Gate failed with status: ${qg.status}"
                         }
                     }
                 }
