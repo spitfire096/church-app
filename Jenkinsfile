@@ -195,6 +195,9 @@ pipeline {
                         # Install dependencies
                         npm install --save-dev jest @testing-library/react @testing-library/jest-dom @types/jest jest-environment-jsdom jest-sonar-reporter
                         
+                        # Create coverage directory
+                        mkdir -p coverage
+                        
                         # Run tests with coverage
                         npm run test:ci || exit 1  # Fail if tests fail
                         
@@ -219,10 +222,9 @@ pipeline {
                             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts \\
                             -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
-                            -Dsonar.testExecutionReportPaths=test-report.xml \\
+                            -Dsonar.testExecutionReportPaths=coverage/test-report.xml \\
                             -Dsonar.qualitygate.wait=true \\
                             -Dsonar.javascript.coveragePlugin=lcov \\
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.nodejs.executable=\$(which node)
                         """
                     }

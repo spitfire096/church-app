@@ -28,15 +28,9 @@ const customJestConfig = {
             lines: 80
         },
     },
-    testResultsProcessor: "jest-sonar-reporter",
-    reporters: [
-        "default",
-        ["jest-sonar-reporter", {
-            outputDirectory: ".",
-            outputName: "test-report.xml",
-            sonarQubeVersion: "10.3",
-        }]
-    ]
+    reporters: ['default'],
+    testResultsProcessor: require.resolve('jest-sonar-reporter'),
+    coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary']
 }
 
 module.exports = createJestConfig(customJestConfig) 
