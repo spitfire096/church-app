@@ -138,16 +138,38 @@ pipeline {
                                     pwd
                                     ls -la
                                     
+                                    # Clean install dependencies
+                                    echo "Cleaning npm cache and node_modules..."
+                                    npm cache clean --force
+                                    rm -rf node_modules package-lock.json .next coverage
+                                    
                                     # Install dependencies including TypeScript
                                     echo "Installing dependencies..."
-                                    npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest
-                                    npm install
+                                    npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom jest-sonar-reporter
+                                    npm install --legacy-peer-deps
                                     
                                     # Verify package.json exists and has correct scripts
                                     if [ ! -f package.json ]; then
                                         echo "package.json not found!"
                                         exit 1
                                     fi
+                                    
+                                    # Add required scripts if they don't exist
+                                    node -e '
+                                        const fs = require("fs");
+                                        const pkg = JSON.parse(fs.readFileSync("package.json"));
+                                        pkg.scripts = {
+                                            ...pkg.scripts,
+                                            "dev": "next dev",
+                                            "build": "next build",
+                                            "start": "next start",
+                                            "test": "jest",
+                                            "test:watch": "jest --watch",
+                                            "test:coverage": "jest --coverage",
+                                            "test:ci": "jest --ci --coverage --maxWorkers=2"
+                                        };
+                                        fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+                                    '
                                     
                                     # Display package.json content
                                     echo "package.json contents:"
