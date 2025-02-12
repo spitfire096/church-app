@@ -171,10 +171,9 @@ pipeline {
         stage('Frontend SonarQube Analysis') {
             steps {
                 dir('FA-frontend') {
-                    // Test SonarQube connectivity first
+                    // Run tests with coverage first
                     sh '''
-                        curl -v http://34.234.95.185:9000/api/v2/analysis/version
-                        nc -zv 34.234.95.185 9000
+                        npm run test:ci || true
                     '''
                     
                     withSonarQubeEnv('SonarQube') {
@@ -191,6 +190,7 @@ pipeline {
                             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts \\
                             -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
+                            -Dsonar.testExecutionReportPaths=test-report.xml \\
                             -Dsonar.qualitygate.wait=true \\
                             -Dsonar.nodejs.executable=\$(which node)
                         """
