@@ -143,6 +143,8 @@ pipeline {
                                         "src/app/components/DashboardLayout.tsx"
                                         "src/app/dashboard/analytics/page.tsx"
                                         "src/app/dashboard/users/page.tsx"
+                                        "src/app/dashboard/first-timers/[id]/page.tsx"
+                                        "src/app/first-timers/new/page.tsx"
                                         "src/app/components/FirstTimerFilters.tsx"
                                         "src/app/components/FeedbackSystem.tsx"
                                     )
