@@ -1,17 +1,27 @@
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import RootLayout from '../layout'
+
+// Mock next/font
+jest.mock('next/font/google', () => ({
+  Inter: () => ({
+    className: 'mock-inter',
+  }),
+}))
 
 describe('RootLayout', () => {
   it('renders children correctly', () => {
-    const testContent = 'Test Content'
-    render(
+    const { container } = render(
       <RootLayout>
-        <div>{testContent}</div>
+        <div data-testid="test-content">Test Content</div>
       </RootLayout>
     )
     
-    expect(screen.getByText(testContent)).toBeInTheDocument()
-    expect(document.querySelector('html')).toHaveAttribute('lang', 'en')
+    // Check if the content is rendered
+    expect(container.querySelector('[data-testid="test-content"]')).toBeInTheDocument()
+    
+    // Check for html lang attribute
+    const html = container.parentElement
+    expect(html).toHaveAttribute('lang', 'en')
   })
 
   it('includes necessary meta tags', () => {

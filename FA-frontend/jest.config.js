@@ -14,6 +14,7 @@ const customJestConfig = {
     testEnvironment: 'jest-environment-jsdom',
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
+        '^@next/font/(.*)$': require.resolve('next/dist/build/jest/__mocks__/nextFontMock.js'),
     },
     collectCoverageFrom: [
         'src/**/*.{js,jsx,ts,tsx}',
@@ -35,6 +36,10 @@ const customJestConfig = {
     testResultsProcessor: require.resolve('jest-sonar-reporter'),
     coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
     testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+    transformIgnorePatterns: [
+        '/node_modules/',
+        '^.+\\.module\\.(css|sass|scss)$',
+    ],
     transform: {
         '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
     }

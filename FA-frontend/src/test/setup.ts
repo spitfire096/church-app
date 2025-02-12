@@ -15,6 +15,13 @@ jest.mock('next/navigation', () => ({
   },
 }))
 
+// Mock next/font
+jest.mock('next/font/google', () => ({
+  Inter: () => ({
+    className: 'mock-inter',
+  }),
+}))
+
 // Mock the API
 jest.mock('@/lib/api', () => ({
   api: {
@@ -27,4 +34,19 @@ jest.mock('@/lib/api', () => ({
 
 // Add TextEncoder/TextDecoder to global
 global.TextEncoder = TextEncoder
-global.TextDecoder = TextDecoder as any 
+global.TextDecoder = TextDecoder as any
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+}) 
