@@ -171,9 +171,10 @@ pipeline {
         stage('Frontend SonarQube Analysis') {
             steps {
                 dir('FA-frontend') {
-                    // Run tests with coverage first
+                    // Run tests with coverage and generate report
                     sh '''
                         npm run test:ci || true
+                        [ -f test-report.xml ] || echo '<?xml version="1.0" encoding="UTF-8"?><testExecutions version="1"></testExecutions>' > test-report.xml
                     '''
                     
                     withSonarQubeEnv('SonarQube') {

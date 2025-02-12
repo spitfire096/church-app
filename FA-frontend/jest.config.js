@@ -28,6 +28,15 @@ const customJestConfig = {
             statements: 70,
         },
     },
+    testResultsProcessor: "jest-sonar-reporter",
+    reporters: [
+        "default",
+        ["jest-sonar-reporter", {
+            outputDirectory: ".",
+            outputName: "test-report.xml",
+            sonarQubeVersion: "10.3",
+        }]
+    ]
 }
 
 module.exports = createJestConfig(customJestConfig) 

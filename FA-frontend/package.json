@@ -14,7 +14,7 @@
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
-        "test:ci": "jest --ci --coverage --maxWorkers=2"
+        "test:ci": "jest --ci --coverage --maxWorkers=2 --testResultsProcessor=jest-sonar-reporter"
     },
     "dependencies": {
         "@headlessui/react": "^1.7.18",
@@ -50,5 +50,10 @@
         "axios": {
             "follow-redirects": "^1.15.4"
         }
+    },
+    "jestSonar": {
+        "reportPath": ".",
+        "reportFile": "test-report.xml",
+        "indent": 4
     }
 }
