@@ -143,6 +143,10 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
+                                    # Install global dependencies first
+                                    echo "Installing global dependencies..."
+                                    npm install -g next react react-dom typescript
+                                    
                                     # Create package.json with core dependencies first
                                     echo '{
                                         "name": "fa-frontend",
@@ -158,16 +162,16 @@ pipeline {
                                             "test:ci": "jest --ci --coverage --maxWorkers=2"
                                         },
                                         "dependencies": {
+                                            "next": "14.1.0",
                                             "react": "18.2.0",
                                             "react-dom": "18.2.0",
-                                            "next": "14.1.0",
                                             "next-auth": "4.24.6"
                                         }
                                     }' > package.json
                                     
-                                    # Install core dependencies first
+                                    # Install core dependencies with specific versions
                                     echo "Installing core dependencies..."
-                                    npm install
+                                    npm install next@14.1.0 react@18.2.0 react-dom@18.2.0 next-auth@4.24.6 --save --legacy-peer-deps
                                     
                                     # Now add the rest of the dependencies
                                     node -e '
@@ -208,9 +212,11 @@ pipeline {
                                     echo "Installing remaining dependencies..."
                                     npm install --legacy-peer-deps
                                     
-                                    # Display final package.json content
-                                    echo "Final package.json contents:"
-                                    cat package.json
+                                    # Verify installations
+                                    echo "Verifying installations..."
+                                    npm list react
+                                    npm list react-dom
+                                    npm list next
                                     
                                     # Add "use client" directive to all component files
                                     FILES_TO_UPDATE=(
