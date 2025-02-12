@@ -5,18 +5,19 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with fallback options
+# Install dependencies with legacy peer deps and increased network timeout
 RUN npm config set legacy-peer-deps true && \
+    npm config set network-timeout 300000 && \
     npm install --no-audit --no-fund || \
     npm install --legacy-peer-deps --no-audit --no-fund
 
 # Copy the rest of the application
 COPY . .
 
-# Build the application with error handling
-RUN npm run build || \
+# Build the application with error handling and increased memory
+RUN export NODE_OPTIONS="--max-old-space-size=4096" && \
+    npm run build || \
     (echo "Retrying build with increased memory" && \
-     export NODE_OPTIONS="--max-old-space-size=4096" && \
      npm run build)
 
 # Production image
