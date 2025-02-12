@@ -325,7 +325,7 @@ pipeline {
                             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 522814712595.dkr.ecr.us-east-1.amazonaws.com
                         """
                         
-                        // Build and push Frontend Docker image with error handling
+                        // Build and push Frontend Docker image
                         dir('FA-frontend') {
                             sh """
                                 # Build with retries and logging

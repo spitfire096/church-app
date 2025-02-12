@@ -11,6 +11,9 @@ RUN npm config set legacy-peer-deps true && \
     npm install --no-audit --no-fund || \
     npm install --legacy-peer-deps --no-audit --no-fund
 
+# Create public directory if it doesn't exist
+RUN mkdir -p public
+
 # Copy the rest of the application
 COPY . .
 
@@ -28,7 +31,7 @@ WORKDIR /app
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/public ./public || true  # Make this copy optional
 
 # Set environment variables
 ENV NODE_ENV=production
