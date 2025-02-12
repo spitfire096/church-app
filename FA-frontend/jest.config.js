@@ -7,7 +7,10 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+    setupFilesAfterEnv: [
+        '<rootDir>/src/test/setup.ts',
+        '@testing-library/jest-dom'
+    ],
     testEnvironment: 'jest-environment-jsdom',
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
@@ -30,7 +33,11 @@ const customJestConfig = {
     },
     reporters: ['default'],
     testResultsProcessor: require.resolve('jest-sonar-reporter'),
-    coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary']
+    coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
+    testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+    transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }]
+    }
 }
 
 module.exports = createJestConfig(customJestConfig) 
