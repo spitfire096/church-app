@@ -143,30 +143,41 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
+                                    # Create a temporary package.json with core dependencies
+                                    echo '{
+                                        "name": "fa-frontend",
+                                        "version": "0.1.0",
+                                        "private": true,
+                                        "dependencies": {
+                                            "next": "14.1.0",
+                                            "react": "18.2.0",
+                                            "react-dom": "18.2.0",
+                                            "next-auth": "4.24.6"
+                                        }
+                                    }' > package.json.tmp
+                                    
                                     # Install core dependencies first
                                     echo "Installing core dependencies..."
-                                    npm install --save next@14.1.0 react@18.2.0 react-dom@18.2.0
+                                    mv package.json.tmp package.json
+                                    npm install
                                     
-                                    # Install dev dependencies
-                                    echo "Installing dev dependencies..."
-                                    npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom jest-sonar-reporter
-                                    
-                                    # Install remaining dependencies
-                                    echo "Installing remaining dependencies..."
-                                    npm install --legacy-peer-deps
-                                    
-                                    # Verify package.json exists and has correct scripts
-                                    if [ ! -f package.json ]; then
-                                        echo "package.json not found!"
-                                        exit 1
-                                    fi
-                                    
-                                    # Add required scripts if they don't exist
+                                    # Now add dev dependencies to package.json
                                     node -e '
                                         const fs = require("fs");
                                         const pkg = JSON.parse(fs.readFileSync("package.json"));
+                                        pkg.devDependencies = {
+                                            "@testing-library/jest-dom": "^6.4.2",
+                                            "@testing-library/react": "^14.2.1",
+                                            "@types/jest": "^29.5.12",
+                                            "@types/node": "^20.11.16",
+                                            "@types/react": "^18.2.52",
+                                            "@types/react-dom": "^18.2.18",
+                                            "typescript": "^5.3.3",
+                                            "jest": "^29.7.0",
+                                            "jest-environment-jsdom": "^29.7.0",
+                                            "jest-sonar-reporter": "^2.0.0"
+                                        };
                                         pkg.scripts = {
-                                            ...pkg.scripts,
                                             "dev": "next dev",
                                             "build": "next build",
                                             "start": "next start",
@@ -178,8 +189,12 @@ pipeline {
                                         fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
                                     '
                                     
-                                    # Display package.json content
-                                    echo "package.json contents:"
+                                    # Install dev dependencies
+                                    echo "Installing dev dependencies..."
+                                    npm install
+                                    
+                                    # Display final package.json content
+                                    echo "Final package.json contents:"
                                     cat package.json
                                     
                                     # Add "use client" directive to all component files
