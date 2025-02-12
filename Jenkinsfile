@@ -143,16 +143,38 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
-                                    # Create a temporary package.json with all dependencies
+                                    # Create package.json with core dependencies first
                                     echo '{
                                         "name": "fa-frontend",
                                         "version": "0.1.0",
                                         "private": true,
+                                        "scripts": {
+                                            "dev": "next dev",
+                                            "build": "next build",
+                                            "start": "next start",
+                                            "test": "jest",
+                                            "test:watch": "jest --watch",
+                                            "test:coverage": "jest --coverage",
+                                            "test:ci": "jest --ci --coverage --maxWorkers=2"
+                                        },
                                         "dependencies": {
-                                            "next": "14.1.0",
                                             "react": "18.2.0",
                                             "react-dom": "18.2.0",
-                                            "next-auth": "4.24.6",
+                                            "next": "14.1.0",
+                                            "next-auth": "4.24.6"
+                                        }
+                                    }' > package.json
+                                    
+                                    # Install core dependencies first
+                                    echo "Installing core dependencies..."
+                                    npm install
+                                    
+                                    # Now add the rest of the dependencies
+                                    node -e '
+                                        const fs = require("fs");
+                                        const pkg = JSON.parse(fs.readFileSync("package.json"));
+                                        pkg.dependencies = {
+                                            ...pkg.dependencies,
                                             "@headlessui/react": "^1.7.18",
                                             "@heroicons/react": "^2.1.1",
                                             "@tailwindcss/forms": "^0.5.10",
@@ -160,8 +182,8 @@ pipeline {
                                             "chart.js": "^4.4.7",
                                             "react-chartjs-2": "^5.3.0",
                                             "react-csv": "^2.2.2"
-                                        },
-                                        "devDependencies": {
+                                        };
+                                        pkg.devDependencies = {
                                             "@testing-library/jest-dom": "^6.4.2",
                                             "@testing-library/react": "^14.2.1",
                                             "@types/jest": "^29.5.12",
@@ -178,20 +200,12 @@ pipeline {
                                             "postcss": "^8.4.31",
                                             "tailwindcss": "^3.4.1",
                                             "typescript": "^5.3.3"
-                                        },
-                                        "scripts": {
-                                            "dev": "next dev",
-                                            "build": "next build",
-                                            "start": "next start",
-                                            "test": "jest",
-                                            "test:watch": "jest --watch",
-                                            "test:coverage": "jest --coverage",
-                                            "test:ci": "jest --ci --coverage --maxWorkers=2"
-                                        }
-                                    }' > package.json
+                                        };
+                                        fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+                                    '
                                     
-                                    # Install all dependencies
-                                    echo "Installing dependencies..."
+                                    # Install remaining dependencies
+                                    echo "Installing remaining dependencies..."
                                     npm install --legacy-peer-deps
                                     
                                     # Display final package.json content
