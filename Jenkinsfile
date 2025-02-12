@@ -84,9 +84,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        curl -v http://52.91.22.53:8081/repository/npm-group/
-                        curl -v http://52.91.22.53:8081/
-                        npm config set registry http://52.91.22.53:8081/repository/npm-group/
+                        curl -v http://3.90.16.78:8081/repository/npm-group/
+                        curl -v http://3.90.16.78:8081/
+                        npm config set registry http://3.90.16.78:8081/repository/npm-group/
                     '''
                 }
             }
