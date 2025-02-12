@@ -192,8 +192,14 @@ pipeline {
                 dir('FA-frontend') {
                     // Run tests with coverage and generate report
                     sh '''
-                        npm run test:ci || true
-                        [ -f test-report.xml ] || echo '<?xml version="1.0" encoding="UTF-8"?><testExecutions version="1"></testExecutions>' > test-report.xml
+                        # Run tests with coverage
+                        npm run test:ci || exit 1  # Fail if tests fail
+                        
+                        # Verify coverage meets threshold
+                        if ! grep -q '"lines":{"total":.*,"covered":.*,"skipped":0,"pct":70' coverage/coverage-summary.json; then
+                            echo "Coverage threshold not met"
+                            exit 1
+                        fi
                     '''
                     
                     withSonarQubeEnv('SonarQube') {
@@ -208,12 +214,22 @@ pipeline {
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \\
-                            -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts,src/app/layout.tsx \\
-                            -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/*,src/app/layout.tsx \\
+                            -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts \\
+                            -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
                             -Dsonar.testExecutionReportPaths=test-report.xml \\
                             -Dsonar.qualitygate.wait=true \\
+                            -Dsonar.javascript.coveragePlugin=lcov \\
+                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.nodejs.executable=\$(which node)
                         """
+                    }
+                }
+            }
+            post {
+                failure {
+                    script {
+                        echo "SonarQube Analysis failed but continuing pipeline..."
+                        currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
@@ -313,11 +329,11 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'HOURS') {
-                    // Wait for quality gate but don't fail the pipeline
                     script {
                         def qg = waitForQualityGate abortPipeline: false
                         if (qg.status != 'OK') {
                             echo "Quality Gate warning: ${qg.status}"
+                            currentBuild.result = 'UNSTABLE'
                             slackSend(
                                 channel: '#devopscicd',
                                 color: 'warning',
@@ -328,6 +344,8 @@ pipeline {
                                     *Status:* ${qg.status}
                                     *Details:* Check SonarQube analysis for more information
                                     *SonarQube URL:* http://34.234.95.185:9000/dashboard?id=church-app-frontend
+                                    
+                                    Note: Pipeline will continue despite quality gate failure
                                 """
                             )
                         }
