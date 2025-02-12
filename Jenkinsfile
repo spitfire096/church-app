@@ -127,13 +127,16 @@ pipeline {
             }
         }
         
-        stage('Frontend Build') {
+        stage('Frontend Build & Test') {
             steps {
                 dir('FA-frontend') {
                     nodejs(nodeJSInstallationName: 'NodeJS 18') {
                         script {
                             try {
                                 sh '''#!/bin/bash
+                                    # Run tests with coverage
+                                    npm run test:coverage || true
+
                                     # Ensure all client components have "use client" directive
                                     find src/app -type f -name "*.tsx" ! -name "layout.tsx" -exec grep -L "use client" {} \\; | while read -r file; do
                                         echo '"use client";' | cat - "$file" > temp && mv temp "$file"
@@ -156,7 +159,7 @@ pipeline {
                                     fi
                                 '''
                             } catch (err) {
-                                archiveArtifacts artifacts: 'build.log,typescript-errors.log', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'build.log,typescript-errors.log,coverage/**/*', allowEmptyArchive: true
                                 throw err
                             }
                         }
@@ -179,14 +182,16 @@ pipeline {
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
                             -Dsonar.projectKey=church-app-frontend \\
                             -Dsonar.sources=src \\
+                            -Dsonar.tests=src \\
+                            -Dsonar.test.inclusions=**/*.test.tsx,**/*.test.ts \\
                             -Dsonar.host.url=http://34.234.95.185:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \\
-                            -Dsonar.test.inclusions=src/**/*.test.tsx,src/**/*.test.ts \\
-                            -Dsonar.coverage.exclusions=src/**/*.test.tsx,src/**/*.test.ts,src/types/**/* \\
+                            -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts \\
                             -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
+                            -Dsonar.qualitygate.wait=true \\
                             -Dsonar.nodejs.executable=\$(which node)
                         """
                     }

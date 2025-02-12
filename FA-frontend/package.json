@@ -11,6 +11,7 @@
         "migrate:undo": "cross-env NODE_ENV=development npx sequelize-cli db:migrate:undo",
         "migrate:undo:all": "cross-env NODE_ENV=development npx sequelize-cli db:migrate:undo:all",
         "migrate:create": "sequelize-cli migration:create",
+        "test": "jest",
         "test:coverage": "jest --coverage"
     },
     "dependencies": {
