@@ -131,9 +131,9 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Remove everything first
-                                    rm -rf * .[^.]*
-
+                                    # Clean everything including hidden files
+                                    rm -rf * .[^.] .??*
+                                    
                                     # Create basic Next.js app structure
                                     mkdir -p app
                                     
@@ -151,32 +151,31 @@ pipeline {
                                             "react-dom": "18.2.0"
                                         }
                                     }' > package.json
-
-                                    # Create next.config.js
-                                    echo 'module.exports = {}' > next.config.js
-
+                                    
                                     # Create minimal page
-                                    echo 'export default function Page() {
+                                    echo "function Page() {
                                         return <h1>Hello World</h1>
-                                    }' > app/page.js
-
+                                    }
+                                    export default Page" > app/page.jsx
+                                    
                                     # Create minimal layout
-                                    echo 'export default function Layout({ children }) {
+                                    echo "function Layout({ children }) {
                                         return (
                                             <html>
                                                 <body>{children}</body>
                                             </html>
                                         )
-                                    }' > app/layout.js
-
+                                    }
+                                    export default Layout" > app/layout.jsx
+                                    
                                     # Install dependencies
                                     npm install
-
+                                    
                                     # Build application
                                     npm run build
                                 '''
                             } catch (err) {
-                                archiveArtifacts artifacts: 'build.log,.next/**/*,app/**/*', allowEmptyArchive: true
+                                archiveArtifacts artifacts: '.next/**/*,app/**/*', allowEmptyArchive: true
                                 throw err
                             }
                         }
