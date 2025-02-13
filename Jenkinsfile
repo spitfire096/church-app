@@ -141,46 +141,68 @@ pipeline {
                                     # Create necessary directories
                                     mkdir -p app
                                     
-                                    # Create app/page.tsx with verified content
+                                    # Create app/page.tsx with proper formatting
                                     cat > app/page.tsx << 'EOL'
 "use client";
 
+import React from 'react';
+
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1>Welcome to FA Frontend</h1>
-    </main>
-  );
+    return (
+        <main className="flex min-h-screen flex-col items-center justify-between p-24">
+            <h1>Welcome to FA Frontend</h1>
+        </main>
+    );
 }
 EOL
                                     
-                                    # Create app/layout.tsx with verified content
+                                    # Create app/layout.tsx with proper formatting
                                     cat > app/layout.tsx << 'EOL'
-import { Inter } from 'next/font/google'
-import type { Metadata } from 'next'
+import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'FA Frontend',
-  description: 'Church App Frontend',
-}
+    title: 'FA Frontend',
+    description: 'Church App Frontend',
+};
 
 export default function RootLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode
+    children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
-  )
+    return (
+        <html lang="en">
+            <body className={inter.className}>{children}</body>
+        </html>
+    );
 }
 EOL
                                     
                                     # Set proper permissions
                                     chmod 644 app/layout.tsx app/page.tsx
+                                    
+                                    # Create package.json
+                                    echo '{
+                                        "name": "fa-frontend",
+                                        "version": "0.1.0",
+                                        "private": true,
+                                        "scripts": {
+                                            "dev": "next dev",
+                                            "build": "next build",
+                                            "start": "next start"
+                                        },
+                                        "dependencies": {
+                                            "next": "14.1.0",
+                                            "react": "18.2.0",
+                                            "react-dom": "18.2.0"
+                                        }
+                                    }' > package.json
+                                    
+                                    # Install dependencies
+                                    npm install --legacy-peer-deps
                                     
                                     # Verify file contents
                                     echo "Verifying file contents:"
@@ -201,8 +223,6 @@ EOL
                 }
             }
         }
-    }
-}
         
         stage('Frontend SonarQube Analysis') {
             steps {
