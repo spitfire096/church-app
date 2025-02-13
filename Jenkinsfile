@@ -131,13 +131,13 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Clean up
-                                    rm -rf node_modules package-lock.json .next app
+                                    # Clean up everything first
+                                    rm -rf node_modules package-lock.json .next app tsconfig.json tsconfig.paths.json
 
                                     # Create basic Next.js app structure
                                     mkdir -p app
                                     
-                                    # Create simple package.json
+                                    # Create simple package.json without any TypeScript
                                     echo '{
                                         "name": "fa-frontend",
                                         "version": "0.1.0",
@@ -154,22 +154,26 @@ pipeline {
                                         }
                                     }' > package.json
 
-                                    # Create basic page
-                                    echo 'export default function Home() {
-                                        return <h1>Hello World</h1>
-                                    }' > app/page.js
+                                    # Create basic page in JavaScript
+                                    echo "export default function Home() {
+                                        return (
+                                            <div>
+                                                <h1>Hello World</h1>
+                                            </div>
+                                        )
+                                    }" > app/page.js
 
-                                    # Create basic layout
-                                    echo 'export default function RootLayout({ children }) {
+                                    # Create basic layout in JavaScript
+                                    echo "export default function RootLayout({ children }) {
                                         return (
                                             <html>
                                                 <body>{children}</body>
                                             </html>
                                         )
-                                    }' > app/layout.js
+                                    }" > app/layout.js
 
                                     # Install dependencies
-                                    npm install --legacy-peer-deps
+                                    npm install
 
                                     # Build application
                                     npm run build
