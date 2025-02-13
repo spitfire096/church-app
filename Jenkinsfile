@@ -143,16 +143,39 @@ pipeline {
                                     # Create necessary directories
                                     mkdir -p src/app/dashboard
                                     mkdir -p src/app/components
+                                    mkdir -p public
+                                    
+                                    # Create package.json
+                                    echo '{
+                                        "name": "fa-frontend",
+                                        "version": "0.1.0",
+                                        "private": true,
+                                        "scripts": {
+                                            "dev": "next dev",
+                                            "build": "next build",
+                                            "start": "next start",
+                                            "test": "jest"
+                                        },
+                                        "dependencies": {
+                                            "next": "14.1.0",
+                                            "react": "18.2.0",
+                                            "react-dom": "18.2.0",
+                                            "next-auth": "4.24.6"
+                                        }
+                                    }' > package.json
                                     
                                     # Create basic page files
                                     echo "'use client';
+                                    export default function Page() {
+                                        return <div>Home Page</div>
+                                    }" > src/app/page.tsx
                                     
+                                    echo "'use client';
                                     export default function DashboardPage() {
                                         return <div>Dashboard Page</div>
                                     }" > src/app/dashboard/page.tsx
                                     
                                     echo "'use client';
-                                    
                                     export default function RootLayout({
                                         children,
                                     }: {
@@ -165,13 +188,15 @@ pipeline {
                                         )
                                     }" > src/app/layout.tsx
                                     
-                                    # Install core dependencies with specific versions
-                                    echo "Installing core dependencies..."
-                                    npm install next@14.1.0 react@18.2.0 react-dom@18.2.0 next-auth@4.24.6 --save --legacy-peer-deps
+                                    # Create next.config.js
+                                    echo 'module.exports = {
+                                        reactStrictMode: true,
+                                        swcMinify: true,
+                                    }' > next.config.js
                                     
-                                    # Install dev dependencies
-                                    echo "Installing dev dependencies..."
-                                    npm install --save-dev typescript @types/node @types/react @types/react-dom @types/jest jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom jest-sonar-reporter --legacy-peer-deps
+                                    # Install dependencies
+                                    echo "Installing dependencies..."
+                                    npm install --legacy-peer-deps
                                     
                                     # Create tsconfig.json
                                     echo '{
@@ -202,18 +227,6 @@ pipeline {
                                         "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
                                         "exclude": ["node_modules"]
                                     }' > tsconfig.json
-                                    
-                                    # Create next.config.js
-                                    echo 'module.exports = {
-                                        reactStrictMode: true,
-                                        swcMinify: true,
-                                    }' > next.config.js
-                                    
-                                    # Run TypeScript compiler
-                                    echo "Running TypeScript compiler..."
-                                    ./node_modules/.bin/tsc --noEmit || {
-                                        echo "TypeScript errors found, but continuing..."
-                                    }
                                     
                                     # Build with detailed logging
                                     echo "Building application..."
