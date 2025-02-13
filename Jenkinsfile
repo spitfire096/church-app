@@ -197,17 +197,13 @@ EOL
                         sh """
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
                             -Dsonar.projectKey=church-app-frontend \\
-                            -Dsonar.sources=src \\
-                            -Dsonar.tests=src \\
-                            -Dsonar.test.inclusions=**/*.test.tsx,**/*.test.ts \\
+                            -Dsonar.sources=app \\
                             -Dsonar.host.url=http://3.90.41.68:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
-                            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \\
-                            -Dsonar.coverage.exclusions=**/*.test.tsx,**/*.test.ts,src/types/**/*,**/index.ts \\
+                            -Dsonar.coverage.exclusions=**/*.test.js,app/types/**/*,**/index.js \\
                             -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
-                            -Dsonar.testExecutionReportPaths=coverage/test-report.xml \\
                             -Dsonar.qualitygate.wait=true \\
                             -Dsonar.javascript.coveragePlugin=lcov \\
                             -Dsonar.nodejs.executable=\$(which node)
