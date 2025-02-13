@@ -158,8 +158,43 @@ pipeline {
                                             "tailwindcss": "^3.4.1",
                                             "postcss": "^8.4.35",
                                             "autoprefixer": "^10.4.17"
+                                        },
+                                        "devDependencies": {
+                                            "typescript": "^5.3.3",
+                                            "@types/react": "^18.2.48",
+                                            "@types/node": "^20.11.16",
+                                            "@types/react-dom": "^18.2.18"
                                         }
                                     }' > package.json
+                                    
+                                    # Create tsconfig.json
+                                    echo '{
+                                        "compilerOptions": {
+                                            "target": "es5",
+                                            "lib": ["dom", "dom.iterable", "esnext"],
+                                            "allowJs": true,
+                                            "skipLibCheck": true,
+                                            "strict": true,
+                                            "noEmit": true,
+                                            "esModuleInterop": true,
+                                            "module": "esnext",
+                                            "moduleResolution": "bundler",
+                                            "resolveJsonModule": true,
+                                            "isolatedModules": true,
+                                            "jsx": "preserve",
+                                            "incremental": true,
+                                            "plugins": [
+                                                {
+                                                    "name": "next"
+                                                }
+                                            ],
+                                            "paths": {
+                                                "@/*": ["./*"]
+                                            }
+                                        },
+                                        "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+                                        "exclude": ["node_modules"]
+                                    }' > tsconfig.json
                                     
                                     # Create postcss.config.js
                                     echo 'module.exports = {
@@ -234,7 +269,7 @@ export default function RootLayout({
 EOL
                                     
                                     # Set proper permissions
-                                    chmod 644 app/layout.tsx app/page.tsx app/globals.css postcss.config.js tailwind.config.js
+                                    chmod 644 app/layout.tsx app/page.tsx app/globals.css postcss.config.js tailwind.config.js tsconfig.json
                                     
                                     # Build application
                                     echo "Building application..."
