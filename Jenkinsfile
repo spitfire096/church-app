@@ -164,41 +164,20 @@ pipeline {
                                         }
                                     }' > package.json
                                     
-                                    # Install dependencies first
-                                    echo "Installing dependencies..."
+                                    # Install TypeScript and types first
+                                    echo "Installing TypeScript and types..."
+                                    npm install --save-dev typescript @types/react @types/node @types/react-dom
+                                    
+                                    # Install remaining dependencies
+                                    echo "Installing remaining dependencies..."
                                     npm install --legacy-peer-deps
+                                    
+                                    # Initialize TypeScript
+                                    echo "Initializing TypeScript..."
+                                    ./node_modules/.bin/tsc --init
                                     
                                     # Create necessary directories
                                     mkdir -p app
-                                    
-                                    # Create tsconfig.json
-                                    echo '{
-                                        "compilerOptions": {
-                                            "target": "es5",
-                                            "lib": ["dom", "dom.iterable", "esnext"],
-                                            "allowJs": true,
-                                            "skipLibCheck": true,
-                                            "strict": true,
-                                            "noEmit": true,
-                                            "esModuleInterop": true,
-                                            "module": "esnext",
-                                            "moduleResolution": "bundler",
-                                            "resolveJsonModule": true,
-                                            "isolatedModules": true,
-                                            "jsx": "preserve",
-                                            "incremental": true,
-                                            "plugins": [
-                                                {
-                                                    "name": "next"
-                                                }
-                                            ],
-                                            "paths": {
-                                                "@/*": ["./*"]
-                                            }
-                                        },
-                                        "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-                                        "exclude": ["node_modules"]
-                                    }' > tsconfig.json
                                     
                                     # Create app/page.tsx
                                     cat > app/page.tsx << 'EOL'
@@ -270,7 +249,7 @@ EOL
                                     }' > tailwind.config.js
                                     
                                     # Set proper permissions
-                                    chmod 644 app/layout.tsx app/page.tsx app/globals.css postcss.config.js tailwind.config.js tsconfig.json
+                                    chmod 644 app/layout.tsx app/page.tsx app/globals.css postcss.config.js tailwind.config.js
                                     
                                     # Build application
                                     echo "Building application..."
