@@ -131,13 +131,13 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Clean up everything first
-                                    rm -rf node_modules package-lock.json .next app tsconfig.json tsconfig.paths.json
+                                    # Clean up everything including TypeScript files
+                                    rm -rf node_modules package-lock.json .next app tsconfig.json tsconfig.paths.json next-env.d.ts
 
                                     # Create basic Next.js app structure
                                     mkdir -p app
                                     
-                                    # Create simple package.json without any TypeScript
+                                    # Create simple package.json without TypeScript
                                     echo '{
                                         "name": "fa-frontend",
                                         "version": "0.1.0",
@@ -154,23 +154,31 @@ pipeline {
                                         }
                                     }' > package.json
 
-                                    # Create basic page in JavaScript
-                                    echo "export default function Home() {
-                                        return (
-                                            <div>
-                                                <h1>Hello World</h1>
-                                            </div>
-                                        )
-                                    }" > app/page.js
+                                    # Create basic page in JavaScript (note the .js extension)
+                                    cat > app/page.js << 'EOL'
+const Home = () => {
+    return (
+        <div>
+            <h1>Hello World</h1>
+        </div>
+    );
+};
 
-                                    # Create basic layout in JavaScript
-                                    echo "export default function RootLayout({ children }) {
-                                        return (
-                                            <html>
-                                                <body>{children}</body>
-                                            </html>
-                                        )
-                                    }" > app/layout.js
+export default Home;
+EOL
+
+                                    # Create basic layout in JavaScript (note the .js extension)
+                                    cat > app/layout.js << 'EOL'
+const RootLayout = ({ children }) => {
+    return (
+        <html>
+            <body>{children}</body>
+        </html>
+    );
+};
+
+export default RootLayout;
+EOL
 
                                     # Install dependencies
                                     npm install
@@ -187,6 +195,8 @@ pipeline {
                 }
             }
         }
+    }
+}
         
         stage('Frontend SonarQube Analysis') {
             steps {
