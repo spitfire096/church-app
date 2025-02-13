@@ -161,8 +161,10 @@ export default function RootLayout({
 }
 EOL
                                     
-                                    # Create app/page.tsx
+                                    # Create app/page.tsx with proper formatting
                                     cat > app/page.tsx << 'EOL'
+import React from 'react'
+
 export default function Home() {
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-24">
