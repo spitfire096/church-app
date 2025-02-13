@@ -148,30 +148,7 @@ pipeline {
                                     chmod -R 755 app public
                                     ls -la
                                     
-                                    # Create package.json
-                                    echo '{
-                                        "name": "fa-frontend",
-                                        "version": "0.1.0",
-                                        "private": true,
-                                        "scripts": {
-                                            "dev": "next dev",
-                                            "build": "next build",
-                                            "start": "next start",
-                                            "test": "jest --passWithNoTests"
-                                        },
-                                        "dependencies": {
-                                            "next": "14.1.0",
-                                            "react": "18.2.0",
-                                            "react-dom": "18.2.0",
-                                            "next-auth": "4.24.6"
-                                        }
-                                    }' > package.json
-                                    
-                                    # Install dependencies first
-                                    echo "Installing dependencies..."
-                                    npm install --legacy-peer-deps
-                                    
-                                    # Create and verify page files
+                                    # Create basic page files first
                                     echo "Creating page files..."
                                     cat > app/page.tsx << 'EOL'
 'use client';
@@ -211,19 +188,37 @@ EOL
                                     # Set proper permissions
                                     chmod 644 app/page.tsx app/dashboard/page.tsx app/layout.tsx
                                     
-                                    # Verify files were created
-                                    echo "Verifying files and permissions..."
-                                    ls -la app/
-                                    ls -la app/dashboard/
-                                    cat app/page.tsx
-                                    cat app/dashboard/page.tsx
-                                    cat app/layout.tsx
-                                    
                                     # Create next.config.js
                                     echo 'module.exports = {
                                         reactStrictMode: true,
                                         swcMinify: true,
+                                        experimental: {
+                                            appDir: true
+                                        }
                                     }' > next.config.js
+                                    
+                                    # Create package.json
+                                    echo '{
+                                        "name": "fa-frontend",
+                                        "version": "0.1.0",
+                                        "private": true,
+                                        "scripts": {
+                                            "dev": "next dev",
+                                            "build": "next build",
+                                            "start": "next start",
+                                            "test": "jest --passWithNoTests"
+                                        },
+                                        "dependencies": {
+                                            "next": "14.1.0",
+                                            "react": "18.2.0",
+                                            "react-dom": "18.2.0",
+                                            "next-auth": "4.24.6"
+                                        }
+                                    }' > package.json
+                                    
+                                    # Install dependencies
+                                    echo "Installing dependencies..."
+                                    npm install --legacy-peer-deps
                                     
                                     # Create tsconfig.json
                                     echo '{
@@ -257,7 +252,7 @@ EOL
                                     
                                     # Verify final directory structure
                                     echo "Final directory structure:"
-                                    tree -a
+                                    find . -type f -not -path "./node_modules/*" -not -path "./.next/*"
                                     
                                     # Build with detailed logging
                                     echo "Building application..."
