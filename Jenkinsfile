@@ -133,124 +133,61 @@ pipeline {
                                 sh '''#!/bin/bash
                                     set -x  # Enable debug mode
                                     
-                                    # Verify we're in the correct directory
-                                    pwd
-                                    ls -la
-                                    
-                                    # Clean install dependencies
-                                    echo "Cleaning npm cache and node_modules..."
-                                    npm cache clean --force
-                                    rm -rf node_modules package-lock.json .next coverage babel.config.js app
-                                    
-                                    # Create package.json
-                                    echo '{
-                                        "name": "fa-frontend",
-                                        "version": "0.1.0",
-                                        "private": true,
-                                        "scripts": {
-                                            "dev": "next dev",
-                                            "build": "next build",
-                                            "start": "next start",
-                                            "lint": "next lint",
-                                            "test": "jest --passWithNoTests"
-                                        },
-                                        "dependencies": {
-                                            "next": "^14.1.0",
-                                            "react": "^18.2.0",
-                                            "react-dom": "^18.2.0"
-                                        },
-                                        "devDependencies": {
-                                            "@testing-library/jest-dom": "^6.4.0",
-                                            "@testing-library/react": "^14.2.0",
-                                            "@types/jest": "^29.5.11",
-                                            "@types/node": "^20.11.0",
-                                            "@types/react": "^18.2.0",
-                                            "jest": "^29.7.0",
-                                            "jest-environment-jsdom": "^29.7.0",
-                                            "typescript": "^5.3.0"
-                                        }
-                                    }' > package.json
-                                    
-                                    # Create next.config.js
-                                    echo 'const nextConfig = {
-                                        output: "standalone",
-                                        reactStrictMode: true,
-                                        swcMinify: true,
-                                    }
-                                    
-                                    module.exports = nextConfig' > next.config.js
-                                    
-                                    # Create jest.config.js
-                                    echo 'const nextJest = require("next/jest")
-                                    
-                                    const createJestConfig = nextJest({
-                                        dir: "./",
-                                    })
-                                    
-                                    const customJestConfig = {
-                                        setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-                                        testEnvironment: "jest-environment-jsdom",
-                                        moduleNameMapper: {
-                                            "^@/components/(.*)$": "<rootDir>/components/$1",
-                                            "^@/app/(.*)$": "<rootDir>/app/$1"
-                                        }
-                                    }
-                                    
-                                    module.exports = createJestConfig(customJestConfig)' > jest.config.js
-                                    
-                                    # Create jest.setup.js
-                                    echo 'import "@testing-library/jest-dom"' > jest.setup.js
-                                    
-                                    # Install dependencies
-                                    echo "Installing dependencies..."
-                                    npm install --legacy-peer-deps
-                                    
                                     # Create necessary directories
                                     mkdir -p app/__tests__
                                     
                                     # Create app/layout.tsx
-                                    echo "import { Inter } from 'next/font/google'
-                                    import type { Metadata } from 'next'
-                                    
-                                    const inter = Inter({ subsets: ['latin'] })
-                                    
-                                    export const metadata: Metadata = {
-                                        title: 'FA Frontend',
-                                        description: 'Church App Frontend',
-                                    }
-                                    
-                                    export default function RootLayout({
-                                        children,
-                                    }: {
-                                        children: React.ReactNode
-                                    }) {
-                                        return (
-                                            <html lang=\"en\">
-                                                <body className={inter.className}>{children}</body>
-                                            </html>
-                                        )
-                                    }" > app/layout.tsx
+                                    cat > app/layout.tsx << 'EOL'
+import { Inter } from 'next/font/google'
+import type { Metadata } from 'next'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+    title: 'FA Frontend',
+    description: 'Church App Frontend',
+}
+
+export default function RootLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
+    return (
+        <html lang="en">
+            <body className={inter.className}>{children}</body>
+        </html>
+    )
+}
+EOL
                                     
                                     # Create app/page.tsx
-                                    echo "export default function Home() {
-                                        return (
-                                            <main className=\"flex min-h-screen flex-col items-center justify-between p-24\">
-                                                <h1>Welcome to FA Frontend</h1>
-                                            </main>
-                                        )
-                                    }" > app/page.tsx
+                                    cat > app/page.tsx << 'EOL'
+export default function Home() {
+    return (
+        <main className="flex min-h-screen flex-col items-center justify-between p-24">
+            <h1>Welcome to FA Frontend</h1>
+        </main>
+    )
+}
+EOL
                                     
                                     # Create app/__tests__/page.test.tsx
-                                    echo "import { render, screen } from '@testing-library/react'
-                                    import Home from '../page'
+                                    cat > app/__tests__/page.test.tsx << 'EOL'
+import { render, screen } from '@testing-library/react'
+import Home from '../page'
+
+describe('Home', () => {
+    it('renders a heading', () => {
+        render(<Home />)
+        const heading = screen.getByRole('heading', { name: /welcome to fa frontend/i })
+        expect(heading).toBeInTheDocument()
+    })
+})
+EOL
                                     
-                                    describe('Home', () => {
-                                        it('renders a heading', () => {
-                                            render(<Home />)
-                                            const heading = screen.getByRole('heading', { name: /welcome to fa frontend/i })
-                                            expect(heading).toBeInTheDocument()
-                                        })
-                                    })" > app/__tests__/page.test.tsx
+                                    # Set proper permissions
+                                    chmod 644 app/layout.tsx app/page.tsx app/__tests__/page.test.tsx
                                     
                                     # Run tests
                                     echo "Running tests..."
@@ -270,6 +207,8 @@ pipeline {
                 }
             }
         }
+    }
+}
         
         stage('Frontend SonarQube Analysis') {
             steps {
