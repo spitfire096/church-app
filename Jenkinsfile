@@ -140,10 +140,10 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
-                                    # Create necessary directories in project root
-                                    mkdir -p app/dashboard
-                                    mkdir -p app/components
-                                    mkdir -p public
+                                    # Create necessary directories and verify
+                                    echo "Creating directories..."
+                                    mkdir -p app/dashboard app/components public
+                                    ls -la
                                     
                                     # Create package.json
                                     echo '{
@@ -164,18 +164,26 @@ pipeline {
                                         }
                                     }' > package.json
                                     
-                                    # Create basic page files
+                                    # Install dependencies first
+                                    echo "Installing dependencies..."
+                                    npm install --legacy-peer-deps
+                                    
+                                    # Create and verify page files
+                                    echo "Creating page files..."
                                     echo "'use client';
+                                    
                                     export default function Page() {
                                         return <div>Home Page</div>
                                     }" > app/page.tsx
                                     
                                     echo "'use client';
+                                    
                                     export default function DashboardPage() {
                                         return <div>Dashboard Page</div>
                                     }" > app/dashboard/page.tsx
                                     
                                     echo "'use client';
+                                    
                                     export default function RootLayout({
                                         children,
                                     }: {
@@ -188,15 +196,19 @@ pipeline {
                                         )
                                     }" > app/layout.tsx
                                     
+                                    # Verify files were created
+                                    echo "Verifying files..."
+                                    ls -la app/
+                                    ls -la app/dashboard/
+                                    cat app/page.tsx
+                                    cat app/dashboard/page.tsx
+                                    cat app/layout.tsx
+                                    
                                     # Create next.config.js
                                     echo 'module.exports = {
                                         reactStrictMode: true,
                                         swcMinify: true,
                                     }' > next.config.js
-                                    
-                                    # Install dependencies
-                                    echo "Installing dependencies..."
-                                    npm install --legacy-peer-deps
                                     
                                     # Create tsconfig.json
                                     echo '{
@@ -237,11 +249,12 @@ pipeline {
                                     
                                     if [ $BUILD_EXIT_CODE -ne 0 ]; then
                                         echo "Build failed. Check build.log for details"
+                                        ls -la
                                         exit 1
                                     fi
                                 '''
                             } catch (err) {
-                                archiveArtifacts artifacts: 'build.log,typescript-errors.log,coverage/**/*', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'build.log,typescript-errors.log,coverage/**/*,.next/**/*,app/**/*', allowEmptyArchive: true
                                 throw err
                             }
                         }
