@@ -142,62 +142,7 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js app
                                     
-                                    # Create necessary directories with proper permissions
-                                    echo "Creating directories..."
-                                    mkdir -p app/dashboard app/components public
-                                    chmod -R 755 app public
-                                    ls -la
-                                    
-                                    # Create basic page files first
-                                    echo "Creating page files..."
-                                    cat > app/page.tsx << 'EOL'
-'use client';
-import React from 'react';
-
-export default function Page() {
-    return <div>Home Page</div>;
-}
-EOL
-
-                                    cat > app/dashboard/page.tsx << 'EOL'
-'use client';
-import React from 'react';
-
-export default function DashboardPage() {
-    return <div>Dashboard Page</div>;
-}
-EOL
-
-                                    cat > app/layout.tsx << 'EOL'
-'use client';
-import React from 'react';
-
-export default function RootLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    return (
-        <html lang="en">
-            <body>{children}</body>
-        </html>
-    );
-}
-EOL
-                                    
-                                    # Set proper permissions
-                                    chmod 644 app/page.tsx app/dashboard/page.tsx app/layout.tsx
-                                    
-                                    # Create next.config.js
-                                    echo 'module.exports = {
-                                        reactStrictMode: true,
-                                        swcMinify: true,
-                                        experimental: {
-                                            appDir: true
-                                        }
-                                    }' > next.config.js
-                                    
-                                    # Create package.json
+                                    # Create package.json first
                                     echo '{
                                         "name": "fa-frontend",
                                         "version": "0.1.0",
@@ -216,9 +161,58 @@ EOL
                                         }
                                     }' > package.json
                                     
-                                    # Install dependencies
+                                    # Install dependencies first
                                     echo "Installing dependencies..."
                                     npm install --legacy-peer-deps
+                                    
+                                    # Create necessary directories with proper permissions
+                                    echo "Creating directories..."
+                                    mkdir -p pages app/dashboard app/components public
+                                    chmod -R 755 pages app public
+                                    
+                                    # Create basic pages
+                                    echo "export default function Home() {
+                                        return <div>Welcome to Next.js</div>
+                                    }" > pages/index.tsx
+                                    
+                                    echo "'use client';
+                                    import React from 'react';
+                                    
+                                    export default function Page() {
+                                        return <div>Home Page</div>;
+                                    }" > app/page.tsx
+                                    
+                                    echo "'use client';
+                                    import React from 'react';
+                                    
+                                    export default function DashboardPage() {
+                                        return <div>Dashboard Page</div>;
+                                    }" > app/dashboard/page.tsx
+                                    
+                                    echo "'use client';
+                                    import React from 'react';
+                                    
+                                    export default function RootLayout({
+                                        children,
+                                    }: {
+                                        children: React.ReactNode;
+                                    }) {
+                                        return (
+                                            <html lang="en">
+                                                <body>{children}</body>
+                                            </html>
+                                        );
+                                    }" > app/layout.tsx
+                                    
+                                    # Create next.config.js with output configuration
+                                    echo 'module.exports = {
+                                        output: "standalone",
+                                        reactStrictMode: true,
+                                        swcMinify: true,
+                                        experimental: {
+                                            appDir: true
+                                        }
+                                    }' > next.config.js
                                     
                                     # Create tsconfig.json
                                     echo '{
@@ -250,8 +244,8 @@ EOL
                                         "exclude": ["node_modules"]
                                     }' > tsconfig.json
                                     
-                                    # Verify final directory structure
-                                    echo "Final directory structure:"
+                                    # Verify directory structure
+                                    echo "Directory structure:"
                                     find . -type f -not -path "./node_modules/*" -not -path "./.next/*"
                                     
                                     # Build with detailed logging
@@ -268,7 +262,7 @@ EOL
                                     fi
                                 '''
                             } catch (err) {
-                                archiveArtifacts artifacts: 'build.log,typescript-errors.log,coverage/**/*,.next/**/*,app/**/*', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'build.log,typescript-errors.log,coverage/**/*,.next/**/*,app/**/*,pages/**/*', allowEmptyArchive: true
                                 throw err
                             }
                         }
