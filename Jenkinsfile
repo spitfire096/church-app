@@ -141,7 +141,54 @@ pipeline {
                                     # Create necessary directories
                                     mkdir -p app
                                     
-                                    # Create app/page.tsx with proper formatting
+                                    # Create package.json with all required dependencies
+                                    echo '{
+                                        "name": "fa-frontend",
+                                        "version": "0.1.0",
+                                        "private": true,
+                                        "scripts": {
+                                            "dev": "next dev",
+                                            "build": "next build",
+                                            "start": "next start"
+                                        },
+                                        "dependencies": {
+                                            "next": "14.1.0",
+                                            "react": "18.2.0",
+                                            "react-dom": "18.2.0",
+                                            "tailwindcss": "^3.4.1",
+                                            "postcss": "^8.4.35",
+                                            "autoprefixer": "^10.4.17"
+                                        }
+                                    }' > package.json
+                                    
+                                    # Create postcss.config.js
+                                    echo 'module.exports = {
+                                        plugins: {
+                                            tailwindcss: {},
+                                            autoprefixer: {},
+                                        }
+                                    }' > postcss.config.js
+                                    
+                                    # Create tailwind.config.js
+                                    echo 'module.exports = {
+                                        content: [
+                                            "./app/**/*.{js,ts,jsx,tsx}",
+                                        ],
+                                        theme: {
+                                            extend: {},
+                                        },
+                                        plugins: [],
+                                    }' > tailwind.config.js
+                                    
+                                    # Create app/globals.css
+                                    echo '@tailwind base;
+                                    @tailwind components;
+                                    @tailwind utilities;' > app/globals.css
+                                    
+                                    # Install dependencies
+                                    npm install --legacy-peer-deps
+                                    
+                                    # Create app/page.tsx
                                     cat > app/page.tsx << 'EOL'
 "use client";
 
@@ -149,17 +196,22 @@ import React from 'react';
 
 export default function Home() {
     return (
-        <main className="flex min-h-screen flex-col items-center justify-between p-24">
-            <h1>Welcome to FA Frontend</h1>
-        </main>
+        <div className="min-h-screen bg-gray-100">
+            <main className="container mx-auto px-4 py-8">
+                <h1 className="text-4xl font-bold text-center text-gray-900">
+                    Welcome to FA Frontend
+                </h1>
+            </main>
+        </div>
     );
 }
 EOL
                                     
-                                    # Create app/layout.tsx with proper formatting
+                                    # Create app/layout.tsx
                                     cat > app/layout.tsx << 'EOL'
 import { Inter } from 'next/font/google';
 import type { Metadata } from 'next';
+import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -182,32 +234,7 @@ export default function RootLayout({
 EOL
                                     
                                     # Set proper permissions
-                                    chmod 644 app/layout.tsx app/page.tsx
-                                    
-                                    # Create package.json
-                                    echo '{
-                                        "name": "fa-frontend",
-                                        "version": "0.1.0",
-                                        "private": true,
-                                        "scripts": {
-                                            "dev": "next dev",
-                                            "build": "next build",
-                                            "start": "next start"
-                                        },
-                                        "dependencies": {
-                                            "next": "14.1.0",
-                                            "react": "18.2.0",
-                                            "react-dom": "18.2.0"
-                                        }
-                                    }' > package.json
-                                    
-                                    # Install dependencies
-                                    npm install --legacy-peer-deps
-                                    
-                                    # Verify file contents
-                                    echo "Verifying file contents:"
-                                    cat app/page.tsx
-                                    cat app/layout.tsx
+                                    chmod 644 app/layout.tsx app/page.tsx app/globals.css postcss.config.js tailwind.config.js
                                     
                                     # Build application
                                     echo "Building application..."
