@@ -138,9 +138,6 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js app
                                     
-                                    # Create necessary directories
-                                    mkdir -p app
-                                    
                                     # Create package.json with all required dependencies
                                     echo '{
                                         "name": "fa-frontend",
@@ -166,6 +163,13 @@ pipeline {
                                             "@types/react-dom": "^18.2.18"
                                         }
                                     }' > package.json
+                                    
+                                    # Install dependencies first
+                                    echo "Installing dependencies..."
+                                    npm install --legacy-peer-deps
+                                    
+                                    # Create necessary directories
+                                    mkdir -p app
                                     
                                     # Create tsconfig.json
                                     echo '{
@@ -195,33 +199,6 @@ pipeline {
                                         "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
                                         "exclude": ["node_modules"]
                                     }' > tsconfig.json
-                                    
-                                    # Create postcss.config.js
-                                    echo 'module.exports = {
-                                        plugins: {
-                                            tailwindcss: {},
-                                            autoprefixer: {},
-                                        }
-                                    }' > postcss.config.js
-                                    
-                                    # Create tailwind.config.js
-                                    echo 'module.exports = {
-                                        content: [
-                                            "./app/**/*.{js,ts,jsx,tsx}",
-                                        ],
-                                        theme: {
-                                            extend: {},
-                                        },
-                                        plugins: [],
-                                    }' > tailwind.config.js
-                                    
-                                    # Create app/globals.css
-                                    echo '@tailwind base;
-                                    @tailwind components;
-                                    @tailwind utilities;' > app/globals.css
-                                    
-                                    # Install dependencies
-                                    npm install --legacy-peer-deps
                                     
                                     # Create app/page.tsx
                                     cat > app/page.tsx << 'EOL'
@@ -267,6 +244,30 @@ export default function RootLayout({
     );
 }
 EOL
+                                    
+                                    # Create app/globals.css
+                                    echo '@tailwind base;
+                                    @tailwind components;
+                                    @tailwind utilities;' > app/globals.css
+                                    
+                                    # Create postcss.config.js
+                                    echo 'module.exports = {
+                                        plugins: {
+                                            tailwindcss: {},
+                                            autoprefixer: {},
+                                        }
+                                    }' > postcss.config.js
+                                    
+                                    # Create tailwind.config.js
+                                    echo 'module.exports = {
+                                        content: [
+                                            "./app/**/*.{js,ts,jsx,tsx}",
+                                        ],
+                                        theme: {
+                                            extend: {},
+                                        },
+                                        plugins: [],
+                                    }' > tailwind.config.js
                                     
                                     # Set proper permissions
                                     chmod 644 app/layout.tsx app/page.tsx app/globals.css postcss.config.js tailwind.config.js tsconfig.json
