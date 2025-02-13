@@ -131,8 +131,9 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Clean everything including hidden files
-                                    rm -rf * .[^.] .??*
+                                    # Clean everything including hidden files and TypeScript files
+                                    rm -rf * .[^.] .??* tsconfig.json tsconfig.paths.json next-env.d.ts
+                                    find . -name "*.ts" -o -name "*.tsx" -delete
                                     
                                     # Create basic Next.js app structure
                                     mkdir -p app
@@ -156,7 +157,7 @@ pipeline {
                                     echo "function Page() {
                                         return <h1>Hello World</h1>
                                     }
-                                    export default Page" > app/page.jsx
+                                    export default Page" > app/page.js
                                     
                                     # Create minimal layout
                                     echo "function Layout({ children }) {
@@ -166,7 +167,7 @@ pipeline {
                                             </html>
                                         )
                                     }
-                                    export default Layout" > app/layout.jsx
+                                    export default Layout" > app/layout.js
                                     
                                     # Install dependencies
                                     npm install
