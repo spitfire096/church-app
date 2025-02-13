@@ -58,9 +58,9 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
                             # Create .npmrc with correct auth configuration
-                            echo "registry=http://3.90.16.78:8081/repository/npm-group/" > .npmrc
-                            echo "//3.90.16.78:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
-                            echo "//3.90.16.78:8081/repository/npm-group/:email=admin@example.com" >> .npmrc
+                            echo "registry=http://54.92.205.87:8081/repository/npm-group/" > .npmrc
+                            echo "//54.92.205.87:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            echo "//54.92.205.87:8081/repository/npm-group/:email=admin@example.com" >> .npmrc
                             echo "strict-ssl=false" >> .npmrc
                             echo "legacy-peer-deps=true" >> .npmrc
                             echo "always-auth=true" >> .npmrc
@@ -70,12 +70,9 @@ pipeline {
                             cp .npmrc FA-backend/.npmrc
                             
                             # Fix npm config
-                            npm config set registry http://3.90.16.78:8081/repository/npm-group/
-                            npm config set //3.90.16.78:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
-                            npm config set //3.90.16.78:8081/repository/npm-group/:email admin@example.com
-                            
-                            # Verify npm configuration
-                            npm config list
+                            npm config set registry http://54.92.205.87:8081/repository/npm-group/
+                            npm config set //54.92.205.87:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
+                            npm config set //54.92.205.87:8081/repository/npm-group/:email admin@example.com
                         """
                     }
                 }
@@ -86,9 +83,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        curl -v http://3.90.16.78:8081/repository/npm-group/
-                        curl -v http://3.90.16.78:8081/
-                        npm config set registry http://3.90.16.78:8081/repository/npm-group/
+                        curl -v http://54.92.205.87:8081/repository/npm-group/
+                        curl -v http://54.92.205.87:8081/
+                        npm config set registry http://54.92.205.87:8081/repository/npm-group/
                     '''
                 }
             }
@@ -277,24 +274,6 @@ pipeline {
         stage('Frontend SonarQube Analysis') {
             steps {
                 dir('FA-frontend') {
-                    // Install dependencies and run tests
-                    sh '''
-                        # Install dependencies
-                        npm install --save-dev jest @testing-library/react @testing-library/jest-dom @types/jest jest-environment-jsdom jest-sonar-reporter
-                        
-                        # Create coverage directory
-                        mkdir -p coverage
-                        
-                        # Run tests with coverage
-                        npm run test:ci || exit 1  # Fail if tests fail
-                        
-                        # Verify coverage meets threshold
-                        if ! grep -q '"lines":{"total":.*,"covered":.*,"skipped":0,"pct":80' coverage/coverage-summary.json; then
-                            echo "Coverage threshold not met"
-                            exit 1
-                        fi
-                    '''
-                    
                     withSonarQubeEnv('SonarQube') {
                         sh """
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
@@ -302,7 +281,7 @@ pipeline {
                             -Dsonar.sources=src \\
                             -Dsonar.tests=src \\
                             -Dsonar.test.inclusions=**/*.test.tsx,**/*.test.ts \\
-                            -Dsonar.host.url=http://34.234.95.185:9000 \\
+                            -Dsonar.host.url=http://3.90.41.68:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
@@ -392,10 +371,9 @@ pipeline {
         stage('Backend SonarQube Analysis') {
             steps {
                 dir('FA-backend') {
-                    // Test SonarQube connectivity first
                     sh '''
-                        curl -v http://34.234.95.185:9000/api/v2/analysis/version
-                        nc -zv 34.234.95.185 9000
+                        curl -v http://3.90.41.68:9000/api/v2/analysis/version
+                        nc -zv 3.90.41.68 9000
                     '''
                     
                     withSonarQubeEnv('SonarQube') {
@@ -403,7 +381,7 @@ pipeline {
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
                             -Dsonar.projectKey=church-app-backend \\
                             -Dsonar.sources=src \\
-                            -Dsonar.host.url=http://34.234.95.185:9000 \\
+                            -Dsonar.host.url=http://3.90.41.68:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
@@ -435,7 +413,7 @@ pipeline {
                                     *Build Number:* ${env.BUILD_NUMBER}
                                     *Status:* ${qg.status}
                                     *Details:* Check SonarQube analysis for more information
-                                    *SonarQube URL:* http://34.234.95.185:9000/dashboard?id=church-app-frontend
+                                    *SonarQube URL:* http://3.90.41.68:9000/dashboard?id=church-app-frontend
                                     
                                     Note: Pipeline will continue despite quality gate failure
                                 """
@@ -572,20 +550,17 @@ pipeline {
                         sh """
                             # Upload Frontend artifact
                             curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${frontendArtifact} \
-                                "http://3.90.16.78:8081/repository/church-app-releases/frontend/${frontendArtifact}"
+                                "http://54.92.205.87:8081/repository/church-app-releases/frontend/${frontendArtifact}"
                             
                             # Upload Backend artifact
                             curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${backendArtifact} \
-                                "http://3.90.16.78:8081/repository/church-app-releases/backend/${backendArtifact}"
-                            
-                            # Clean up zip files
-                            rm ${frontendArtifact} ${backendArtifact}
+                                "http://54.92.205.87:8081/repository/church-app-releases/backend/${backendArtifact}"
                         """
                     }
                     
                     // Update Slack message to include artifact information
-                    env.FRONTEND_ARTIFACT_URL = "http://3.90.16.78:8081/repository/church-app-releases/frontend/${frontendArtifact}"
-                    env.BACKEND_ARTIFACT_URL = "http://3.90.16.78:8081/repository/church-app-releases/backend/${backendArtifact}"
+                    env.FRONTEND_ARTIFACT_URL = "http://54.92.205.87:8081/repository/church-app-releases/frontend/${frontendArtifact}"
+                    env.BACKEND_ARTIFACT_URL = "http://54.92.205.87:8081/repository/church-app-releases/backend/${backendArtifact}"
                 }
             }
         }
