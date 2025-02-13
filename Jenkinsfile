@@ -131,14 +131,13 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    set -x  # Enable debug mode
+                                    # Clean up
+                                    rm -rf node_modules package-lock.json .next app
+
+                                    # Create basic Next.js app structure
+                                    mkdir -p app
                                     
-                                    # Clean install dependencies
-                                    echo "Cleaning npm cache and node_modules..."
-                                    npm cache clean --force
-                                    rm -rf node_modules package-lock.json .next coverage babel.config.js app
-                                    
-                                    # Create package.json with all required dependencies
+                                    # Create simple package.json
                                     echo '{
                                         "name": "fa-frontend",
                                         "version": "0.1.0",
@@ -151,113 +150,32 @@ pipeline {
                                         "dependencies": {
                                             "next": "14.1.0",
                                             "react": "18.2.0",
-                                            "react-dom": "18.2.0",
-                                            "tailwindcss": "^3.4.1",
-                                            "postcss": "^8.4.35",
-                                            "autoprefixer": "^10.4.17"
-                                        },
-                                        "devDependencies": {
-                                            "typescript": "^5.3.3",
-                                            "@types/react": "^18.2.48",
-                                            "@types/node": "^20.11.16",
-                                            "@types/react-dom": "^18.2.18"
+                                            "react-dom": "18.2.0"
                                         }
                                     }' > package.json
-                                    
-                                    # Install TypeScript and types first
-                                    echo "Installing TypeScript and types..."
-                                    npm install --save-dev typescript @types/react @types/node @types/react-dom
-                                    
-                                    # Install remaining dependencies
-                                    echo "Installing remaining dependencies..."
+
+                                    # Create basic page
+                                    echo 'export default function Home() {
+                                        return <h1>Hello World</h1>
+                                    }' > app/page.js
+
+                                    # Create basic layout
+                                    echo 'export default function RootLayout({ children }) {
+                                        return (
+                                            <html>
+                                                <body>{children}</body>
+                                            </html>
+                                        )
+                                    }' > app/layout.js
+
+                                    # Install dependencies
                                     npm install --legacy-peer-deps
-                                    
-                                    # Initialize TypeScript
-                                    echo "Initializing TypeScript..."
-                                    ./node_modules/.bin/tsc --init
-                                    
-                                    # Create necessary directories
-                                    mkdir -p app
-                                    
-                                    # Create app/page.tsx
-                                    cat > app/page.tsx << 'EOL'
-"use client";
 
-import React from 'react';
-
-export default function Home() {
-    return (
-        <div className="min-h-screen bg-gray-100">
-            <main className="container mx-auto px-4 py-8">
-                <h1 className="text-4xl font-bold text-center text-gray-900">
-                    Welcome to FA Frontend
-                </h1>
-            </main>
-        </div>
-    );
-}
-EOL
-                                    
-                                    # Create app/layout.tsx
-                                    cat > app/layout.tsx << 'EOL'
-import { Inter } from 'next/font/google';
-import type { Metadata } from 'next';
-import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-    title: 'FA Frontend',
-    description: 'Church App Frontend',
-};
-
-export default function RootLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    return (
-        <html lang="en">
-            <body className={inter.className}>{children}</body>
-        </html>
-    );
-}
-EOL
-                                    
-                                    # Create app/globals.css
-                                    echo '@tailwind base;
-                                    @tailwind components;
-                                    @tailwind utilities;' > app/globals.css
-                                    
-                                    # Create postcss.config.js
-                                    echo 'module.exports = {
-                                        plugins: {
-                                            tailwindcss: {},
-                                            autoprefixer: {},
-                                        }
-                                    }' > postcss.config.js
-                                    
-                                    # Create tailwind.config.js
-                                    echo 'module.exports = {
-                                        content: [
-                                            "./app/**/*.{js,ts,jsx,tsx}",
-                                        ],
-                                        theme: {
-                                            extend: {},
-                                        },
-                                        plugins: [],
-                                    }' > tailwind.config.js
-                                    
-                                    # Set proper permissions
-                                    chmod 644 app/layout.tsx app/page.tsx app/globals.css postcss.config.js tailwind.config.js
-                                    
                                     # Build application
-                                    echo "Building application..."
-                                    export NODE_OPTIONS="--max-old-space-size=4096"
-                                    NEXT_TELEMETRY_DISABLED=1 npm run build
+                                    npm run build
                                 '''
                             } catch (err) {
-                                archiveArtifacts artifacts: 'build.log,typescript-errors.log,coverage/**/*,.next/**/*,app/**/*', allowEmptyArchive: true
+                                archiveArtifacts artifacts: 'build.log,.next/**/*,app/**/*', allowEmptyArchive: true
                                 throw err
                             }
                         }
