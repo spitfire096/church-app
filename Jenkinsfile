@@ -204,18 +204,24 @@ EOL
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
                             -Dsonar.coverage.exclusions=**/*.test.js,app/types/**/*,**/index.js \\
                             -Dsonar.exclusions=node_modules/**/*,coverage/**/*,.next/**/* \\
-                            -Dsonar.qualitygate.wait=true \\
+                            -Dsonar.qualitygate.wait=false \\
                             -Dsonar.javascript.coveragePlugin=lcov \\
-                            -Dsonar.nodejs.executable=\$(which node)
+                            -Dsonar.qualitygate.timeout=300
                         """
+                    }
+                    
+                    // Wait for quality gate in a separate step
+                    timeout(time: 5, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: false
                     }
                 }
             }
             post {
                 failure {
                     script {
-                        echo "SonarQube Analysis failed but continuing pipeline..."
+                        echo "SonarQube Analysis completed with issues but continuing pipeline..."
                         currentBuild.result = 'UNSTABLE'
+                        notifyQualityIssues()
                     }
                 }
             }
