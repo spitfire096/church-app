@@ -131,11 +131,8 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Clean everything
-                                    rm -rf *
-                                    rm -rf .next .git node_modules
-                                    rm -f .npmrc .gitignore package-lock.json
-                                    rm -f tsconfig.json tsconfig.*.json next-env.d.ts
+                                    # Remove all files including hidden ones
+                                    find . -delete
                                     
                                     # Create basic Next.js app structure
                                     mkdir -p app
@@ -159,20 +156,22 @@ EOL
                                     
                                     # Create minimal page
                                     cat > app/page.js << 'EOL'
-export default function Page() {
+function Page() {
     return <h1>Hello World</h1>
 }
+export default Page
 EOL
                                     
                                     # Create minimal layout
                                     cat > app/layout.js << 'EOL'
-export default function Layout({ children }) {
+function Layout({ children }) {
     return (
         <html>
             <body>{children}</body>
         </html>
     )
 }
+export default Layout
 EOL
                                     
                                     # Install dependencies
