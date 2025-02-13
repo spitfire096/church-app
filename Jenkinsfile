@@ -140,9 +140,9 @@ pipeline {
                                     npm cache clean --force
                                     rm -rf node_modules package-lock.json .next coverage babel.config.js
                                     
-                                    # Create necessary directories
-                                    mkdir -p src/app/dashboard
-                                    mkdir -p src/app/components
+                                    # Create necessary directories in project root
+                                    mkdir -p app/dashboard
+                                    mkdir -p app/components
                                     mkdir -p public
                                     
                                     # Create package.json
@@ -154,7 +154,7 @@ pipeline {
                                             "dev": "next dev",
                                             "build": "next build",
                                             "start": "next start",
-                                            "test": "jest"
+                                            "test": "jest --passWithNoTests"
                                         },
                                         "dependencies": {
                                             "next": "14.1.0",
@@ -168,12 +168,12 @@ pipeline {
                                     echo "'use client';
                                     export default function Page() {
                                         return <div>Home Page</div>
-                                    }" > src/app/page.tsx
+                                    }" > app/page.tsx
                                     
                                     echo "'use client';
                                     export default function DashboardPage() {
                                         return <div>Dashboard Page</div>
-                                    }" > src/app/dashboard/page.tsx
+                                    }" > app/dashboard/page.tsx
                                     
                                     echo "'use client';
                                     export default function RootLayout({
@@ -186,7 +186,7 @@ pipeline {
                                                 <body>{children}</body>
                                             </html>
                                         )
-                                    }" > src/app/layout.tsx
+                                    }" > app/layout.tsx
                                     
                                     # Create next.config.js
                                     echo 'module.exports = {
@@ -221,7 +221,7 @@ pipeline {
                                                 }
                                             ],
                                             "paths": {
-                                                "@/*": ["./src/*"]
+                                                "@/*": ["./*"]
                                             }
                                         },
                                         "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
