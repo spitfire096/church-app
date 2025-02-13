@@ -131,43 +131,49 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Clean everything including hidden files and TypeScript files
-                                    rm -rf * .[^.] .??* tsconfig.json tsconfig.paths.json next-env.d.ts
-                                    find . -name "*.ts" -o -name "*.tsx" -delete
+                                    # Clean everything
+                                    rm -rf *
+                                    rm -rf .next .git node_modules
+                                    rm -f .npmrc .gitignore package-lock.json
+                                    rm -f tsconfig.json tsconfig.*.json next-env.d.ts
                                     
                                     # Create basic Next.js app structure
                                     mkdir -p app
                                     
                                     # Create minimal package.json
-                                    echo '{
-                                        "name": "fa-frontend",
-                                        "version": "0.1.0",
-                                        "private": true,
-                                        "scripts": {
-                                            "build": "next build"
-                                        },
-                                        "dependencies": {
-                                            "next": "14.1.0",
-                                            "react": "18.2.0",
-                                            "react-dom": "18.2.0"
-                                        }
-                                    }' > package.json
+                                    cat > package.json << 'EOL'
+{
+    "name": "fa-frontend",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "build": "next build"
+    },
+    "dependencies": {
+        "next": "14.1.0",
+        "react": "18.2.0",
+        "react-dom": "18.2.0"
+    }
+}
+EOL
                                     
                                     # Create minimal page
-                                    echo "function Page() {
-                                        return <h1>Hello World</h1>
-                                    }
-                                    export default Page" > app/page.js
+                                    cat > app/page.js << 'EOL'
+export default function Page() {
+    return <h1>Hello World</h1>
+}
+EOL
                                     
                                     # Create minimal layout
-                                    echo "function Layout({ children }) {
-                                        return (
-                                            <html>
-                                                <body>{children}</body>
-                                            </html>
-                                        )
-                                    }
-                                    export default Layout" > app/layout.js
+                                    cat > app/layout.js << 'EOL'
+export default function Layout({ children }) {
+    return (
+        <html>
+            <body>{children}</body>
+        </html>
+    )
+}
+EOL
                                     
                                     # Install dependencies
                                     npm install
