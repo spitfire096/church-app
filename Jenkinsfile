@@ -131,21 +131,19 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
-                                    # Clean up everything including TypeScript files
-                                    rm -rf node_modules package-lock.json .next app tsconfig.json tsconfig.paths.json next-env.d.ts
+                                    # Remove everything first
+                                    rm -rf * .[^.]*
 
                                     # Create basic Next.js app structure
                                     mkdir -p app
                                     
-                                    # Create simple package.json without TypeScript
+                                    # Create minimal package.json
                                     echo '{
                                         "name": "fa-frontend",
                                         "version": "0.1.0",
                                         "private": true,
                                         "scripts": {
-                                            "dev": "next dev",
-                                            "build": "next build",
-                                            "start": "next start"
+                                            "build": "next build"
                                         },
                                         "dependencies": {
                                             "next": "14.1.0",
@@ -154,31 +152,22 @@ pipeline {
                                         }
                                     }' > package.json
 
-                                    # Create basic page in JavaScript (note the .js extension)
-                                    cat > app/page.js << 'EOL'
-const Home = () => {
-    return (
-        <div>
-            <h1>Hello World</h1>
-        </div>
-    );
-};
+                                    # Create next.config.js
+                                    echo 'module.exports = {}' > next.config.js
 
-export default Home;
-EOL
+                                    # Create minimal page
+                                    echo 'export default function Page() {
+                                        return <h1>Hello World</h1>
+                                    }' > app/page.js
 
-                                    # Create basic layout in JavaScript (note the .js extension)
-                                    cat > app/layout.js << 'EOL'
-const RootLayout = ({ children }) => {
-    return (
-        <html>
-            <body>{children}</body>
-        </html>
-    );
-};
-
-export default RootLayout;
-EOL
+                                    # Create minimal layout
+                                    echo 'export default function Layout({ children }) {
+                                        return (
+                                            <html>
+                                                <body>{children}</body>
+                                            </html>
+                                        )
+                                    }' > app/layout.js
 
                                     # Install dependencies
                                     npm install
@@ -195,8 +184,6 @@ EOL
                 }
             }
         }
-    }
-}
         
         stage('Frontend SonarQube Analysis') {
             steps {
