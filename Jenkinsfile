@@ -392,9 +392,9 @@ ENV NODE_ENV=production
 RUN mkdir -p .next/static public && chown -R node:node .
 
 # Copy build output
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static || echo "No static files to copy"
-COPY --from=builder --chown=node:node /app/public ./public || echo "No public files to copy"
-COPY --from=builder --chown=node:node /app/.next/standalone/ . || echo "No standalone files to copy"
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static 2>/dev/null || echo 'No static files'
+COPY --from=builder --chown=node:node /app/public ./public 2>/dev/null || echo 'No public files'
+COPY --from=builder --chown=node:node /app/.next/standalone/ . 2>/dev/null || echo 'No standalone files'
 
 EXPOSE 3000
 
