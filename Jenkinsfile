@@ -360,14 +360,37 @@ EOL
                         
                         // Build and push Frontend Docker image
                         dir('FA-frontend') {
+                            // Create Dockerfile.ci
                             sh """
-                                # Build with retries and logging
+                                cat > Dockerfile.ci << 'EOL'
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+COPY . .
+
+RUN npm install
+RUN npm run build
+
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+EXPOSE 3000
+CMD ["node", "server.js"]
+EOL
+
+                                # Build Docker image
                                 docker build -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci . || {
                                     echo "First build attempt failed, retrying with --no-cache..."
                                     docker build --no-cache -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci .
                                 }
                                 
-                                # Push images if build succeeds
+                                # Push images
                                 docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER}
                                 docker tag 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
                                 docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
