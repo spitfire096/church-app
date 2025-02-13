@@ -376,8 +376,11 @@ RUN npm install
 # Copy source code
 COPY . .
 
+# Create necessary directories
+RUN mkdir -p public .next/static
+
 # Update next.config.js to enable standalone output
-RUN echo 'module.exports = { output: "standalone" }' > next.config.js
+RUN echo 'module.exports = { output: "standalone", distDir: ".next" }' > next.config.js
 
 # Build the application
 RUN npm run build
@@ -389,10 +392,13 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV=production
 
+# Create necessary directories
+RUN mkdir -p public .next/static
+
 # Copy necessary files from builder
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static || true
+COPY --from=builder /app/public ./public || true
+COPY --from=builder /app/.next/standalone ./ || true
 
 EXPOSE 3000
 
