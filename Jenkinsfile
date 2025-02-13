@@ -131,6 +131,8 @@ pipeline {
                         script {
                             try {
                                 sh '''#!/bin/bash
+                                    set -x  # Enable debug mode
+                                    
                                     # Verify we're in the correct directory
                                     pwd
                                     ls -la
@@ -138,11 +140,12 @@ pipeline {
                                     # Clean install dependencies
                                     echo "Cleaning npm cache and node_modules..."
                                     npm cache clean --force
-                                    rm -rf node_modules package-lock.json .next coverage babel.config.js
+                                    rm -rf node_modules package-lock.json .next coverage babel.config.js app
                                     
-                                    # Create necessary directories and verify
+                                    # Create necessary directories with proper permissions
                                     echo "Creating directories..."
                                     mkdir -p app/dashboard app/components public
+                                    chmod -R 755 app public
                                     ls -la
                                     
                                     # Create package.json
@@ -170,34 +173,46 @@ pipeline {
                                     
                                     # Create and verify page files
                                     echo "Creating page files..."
-                                    echo "'use client';
+                                    cat > app/page.tsx << 'EOL'
+'use client';
+import React from 'react';
+
+export default function Page() {
+    return <div>Home Page</div>;
+}
+EOL
+
+                                    cat > app/dashboard/page.tsx << 'EOL'
+'use client';
+import React from 'react';
+
+export default function DashboardPage() {
+    return <div>Dashboard Page</div>;
+}
+EOL
+
+                                    cat > app/layout.tsx << 'EOL'
+'use client';
+import React from 'react';
+
+export default function RootLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return (
+        <html lang="en">
+            <body>{children}</body>
+        </html>
+    );
+}
+EOL
                                     
-                                    export default function Page() {
-                                        return <div>Home Page</div>
-                                    }" > app/page.tsx
-                                    
-                                    echo "'use client';
-                                    
-                                    export default function DashboardPage() {
-                                        return <div>Dashboard Page</div>
-                                    }" > app/dashboard/page.tsx
-                                    
-                                    echo "'use client';
-                                    
-                                    export default function RootLayout({
-                                        children,
-                                    }: {
-                                        children: React.ReactNode
-                                    }) {
-                                        return (
-                                            <html lang=\"en\">
-                                                <body>{children}</body>
-                                            </html>
-                                        )
-                                    }" > app/layout.tsx
+                                    # Set proper permissions
+                                    chmod 644 app/page.tsx app/dashboard/page.tsx app/layout.tsx
                                     
                                     # Verify files were created
-                                    echo "Verifying files..."
+                                    echo "Verifying files and permissions..."
                                     ls -la app/
                                     ls -la app/dashboard/
                                     cat app/page.tsx
@@ -239,6 +254,10 @@ pipeline {
                                         "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
                                         "exclude": ["node_modules"]
                                     }' > tsconfig.json
+                                    
+                                    # Verify final directory structure
+                                    echo "Final directory structure:"
+                                    tree -a
                                     
                                     # Build with detailed logging
                                     echo "Building application..."
