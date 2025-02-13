@@ -376,48 +376,35 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Create next.config.js with standalone output
+# Create next.config.js
 RUN echo 'module.exports = { output: "standalone" }' > next.config.js
 
 # Build the application
 RUN npm run build
 
-# Ensure output directories exist
-RUN mkdir -p .next/static public
-
 FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Set production environment
 ENV NODE_ENV=production
 
-# Create required directories
-RUN mkdir -p .next/static public
+# Create directories and set permissions
+RUN mkdir -p .next/static public && chown -R node:node .
 
-# Copy files from builder stage
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static 2>/dev/null || true
-COPY --from=builder --chown=node:node /app/public ./public 2>/dev/null || true
-COPY --from=builder --chown=node:node /app/.next/standalone/. ./ 2>/dev/null || true
+# Copy build output
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static || echo "No static files to copy"
+COPY --from=builder --chown=node:node /app/public ./public || echo "No public files to copy"
+COPY --from=builder --chown=node:node /app/.next/standalone/ . || echo "No standalone files to copy"
 
 EXPOSE 3000
 
 USER node
 
-# Start the application
 CMD ["node", "server.js"]
 EOL
 
                                 # Build Docker image
-                                docker build -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci . || {
-                                    echo "First build attempt failed, retrying with --no-cache..."
-                                    docker build --no-cache -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci .
-                                }
-                                
-                                # Push images
-                                docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER}
-                                docker tag 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
-                                docker push 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-latest
+                                docker build -t 522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER} -f Dockerfile.ci .
                             """
                         }
                         
