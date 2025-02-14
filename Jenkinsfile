@@ -373,6 +373,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# Create necessary directories
+RUN mkdir -p public .next/static
+
 # Copy source code
 COPY . .
 
@@ -391,11 +394,12 @@ ENV NODE_ENV=production
 # Create directories and set permissions
 RUN mkdir -p .next/static public && chown -R node:node .
 
-# Copy build output (using shell to handle missing files)
-RUN mkdir -p /app/.next/static /app/public
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static
-COPY --from=builder --chown=node:node /app/public ./public
-COPY --from=builder --chown=node:node /app/.next/standalone/ ./
+# Copy only necessary files from builder
+COPY --from=builder --chown=node:node /app/.next/standalone/. ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static/
+
+# Create empty public directory if it doesn't exist
+RUN mkdir -p public && chown node:node public
 
 EXPOSE 3000
 
