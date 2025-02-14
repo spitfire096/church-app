@@ -365,6 +365,52 @@ EOL
                             "exclude": ["node_modules", "**/*.test.ts"]
                         }' > tsconfig.json
 
+                        # Create main server file
+                        cat > src/pages/index.ts << 'EOL'
+import express from 'express';
+import { Router } from 'express';
+import { models } from '../models';
+import { auth, requireRole } from '../middleware/auth';
+
+const app = express();
+const router = Router();
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Routes
+router.get('/', (req, res) => {
+    res.json({ message: 'Backend server is running' });
+});
+
+// First Timer routes
+router.get('/first-timers', auth, async (req, res) => {
+    try {
+        const firstTimers = await models.FirstTimer.findAll();
+        res.json(firstTimers);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch first timers' });
+    }
+});
+
+// Mount routes
+app.use('/api', router);
+
+// Error handling
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something broke!' });
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
+
+export default app;
+EOL
+
                         # Run build
                         npm run build
                     '''
