@@ -251,10 +251,101 @@ EOL
                 dir('FA-backend') {
                     sh '''
                         # Install TypeScript and all required dependencies
-                        npm install --save-dev typescript @types/node @types/express @types/bcryptjs @types/react @types/react-dom --legacy-peer-deps
-                        npm install --save express bcryptjs react react-dom --legacy-peer-deps
+                        npm install --save-dev typescript @types/node @types/express @types/bcryptjs @types/react @types/react-dom sequelize-typescript --legacy-peer-deps
+                        npm install --save express bcryptjs react react-dom sequelize pg pg-hstore --legacy-peer-deps
 
-                        # Create tsconfig.json with JSX support
+                        # Create src directory structure
+                        mkdir -p src/{components,models,routes,middleware,config}
+
+                        # Create database config
+                        cat > src/config/database.ts << 'EOL'
+import { Sequelize } from 'sequelize-typescript';
+
+const sequelize = new Sequelize({
+    dialect: 'postgres',
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'church_app',
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    models: [__dirname + '/../models']
+});
+
+export default sequelize;
+EOL
+
+                        # Create models with Sequelize
+                        cat > src/models/FirstTimer.ts << 'EOL'
+import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
+import { FollowUpTask } from './FollowUpTask';
+
+@Table
+export class FirstTimer extends Model {
+    @Column(DataType.STRING)
+    name!: string;
+
+    @Column(DataType.STRING)
+    email!: string;
+
+    @Column(DataType.STRING)
+    phone!: string;
+
+    @HasMany(() => FollowUpTask)
+    followUpTasks!: FollowUpTask[];
+}
+EOL
+
+                        cat > src/models/FollowUpTask.ts << 'EOL'
+import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import { FirstTimer } from './FirstTimer';
+
+@Table
+export class FollowUpTask extends Model {
+    @Column(DataType.STRING)
+    status!: string;
+
+    @Column(DataType.TEXT)
+    notes!: string;
+
+    @ForeignKey(() => FirstTimer)
+    @Column
+    firstTimerId!: number;
+
+    @BelongsTo(() => FirstTimer)
+    firstTimer!: FirstTimer;
+}
+EOL
+
+                        cat > src/models/index.ts << 'EOL'
+import { FirstTimer } from './FirstTimer';
+import { FollowUpTask } from './FollowUpTask';
+
+export const models = {
+    FirstTimer,
+    FollowUpTask
+};
+
+export { FirstTimer, FollowUpTask };
+EOL
+
+                        # Create auth middleware with proper types
+                        cat > src/middleware/auth.ts << 'EOL'
+import { Request, Response, NextFunction } from 'express';
+
+export const auth = (req: Request, res: Response, next: NextFunction) => {
+    // Add authentication logic here
+    next();
+};
+
+export const requireRole = (role: string) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        // Add role check logic here
+        next();
+    };
+};
+EOL
+
+                        # Update tsconfig.json for decorators
                         echo '{
                             "compilerOptions": {
                                 "target": "es6",
@@ -265,91 +356,14 @@ EOL
                                 "esModuleInterop": true,
                                 "skipLibCheck": true,
                                 "forceConsistentCasingInFileNames": true,
-                                "jsx": "react",
+                                "experimentalDecorators": true,
+                                "emitDecoratorMetadata": true,
                                 "moduleResolution": "node",
-                                "allowJs": true,
-                                "declaration": true,
-                                "isolatedModules": true
+                                "declaration": true
                             },
                             "include": ["src/**/*"],
                             "exclude": ["node_modules", "**/*.test.ts"]
                         }' > tsconfig.json
-
-                        # Create src directory structure
-                        mkdir -p src/{components,models,routes,middleware}
-
-                        # Create auth middleware
-                        cat > src/middleware/auth.ts << 'EOL'
-export const authMiddleware = (req: any, res: any, next: any) => {
-    // Add authentication logic here
-    next();
-};
-EOL
-
-                        # Create models
-                        cat > src/models/FirstTimer.ts << 'EOL'
-export class FirstTimer {
-    // Add model properties here
-}
-EOL
-
-                        cat > src/models/FollowUpTask.ts << 'EOL'
-export class FollowUpTask {
-    // Add model properties here
-}
-EOL
-
-                        cat > src/models/index.ts << 'EOL'
-export { FirstTimer } from './FirstTimer';
-export { FollowUpTask } from './FollowUpTask';
-EOL
-
-                        # Create React component
-                        cat > src/components/FirstTimerForm.tsx << 'EOL'
-import React from 'react';
-
-export const FirstTimerForm: React.FC = () => {
-    return (
-        <div>
-            <h1>First Timer Form</h1>
-            {/* Add form elements here */}
-        </div>
-    );
-};
-EOL
-
-                        # Create main server file
-                        cat > src/pages/index.ts << 'EOL'
-import express from 'express';
-import { Router } from 'express';
-import { FirstTimer, FollowUpTask } from '../models';
-import { authMiddleware } from '../middleware/auth';
-
-const app = express();
-const router = Router();
-const port = process.env.PORT || 3000;
-
-router.get('/', (req, res) => {
-    res.json({ message: 'Backend server is running' });
-});
-
-app.use('/', router);
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
-
-export default app;
-EOL
-
-                        # Update package.json with build script
-                        node -e '
-                            const fs = require("fs");
-                            const pkg = JSON.parse(fs.readFileSync("package.json"));
-                            pkg.scripts = pkg.scripts || {};
-                            pkg.scripts.build = "tsc";
-                            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
-                        '
 
                         # Run build
                         npm run build
