@@ -696,9 +696,15 @@ EOL
                     withAWS(credentials: 'awscreds', region: 'us-east-1') {
                         // Update ECS task definition
                         def taskDef = readJSON file: 'task-definition.json'
-                        taskDef.containerDefinitions[0].image = "522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER}"
-                        taskDef.containerDefinitions[1].image = "522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-${BUILD_NUMBER}"
-                        writeJSON file: 'task-definition-new.json', json: taskDef
+                        def frontendImage = "522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:frontend-${BUILD_NUMBER}"
+                        def backendImage = "522814712595.dkr.ecr.us-east-1.amazonaws.com/church-appimg:backend-${BUILD_NUMBER}"
+                        
+                        // Update container images as strings
+                        taskDef.containerDefinitions[0].image = frontendImage.toString()
+                        taskDef.containerDefinitions[1].image = backendImage.toString()
+                        
+                        // Write updated task definition
+                        writeJSON file: 'task-definition-new.json', json: taskDef, pretty: 4
 
                         // Register new task definition
                         def taskDefArn = sh(
@@ -708,17 +714,17 @@ EOL
 
                         // Update service with new task definition
                         sh """
-                            aws ecs update-service \
-                                --cluster ${CLUSTER_NAME} \
-                                --service ${SERVICE_NAME} \
-                                --task-definition ${taskDefArn} \
+                            aws ecs update-service \\
+                                --cluster ${CLUSTER_NAME} \\
+                                --service ${SERVICE_NAME} \\
+                                --task-definition ${taskDefArn} \\
                                 --force-new-deployment
                         """
 
                         // Wait for service to stabilize
                         sh """
-                            aws ecs wait services-stable \
-                                --cluster ${CLUSTER_NAME} \
+                            aws ecs wait services-stable \\
+                                --cluster ${CLUSTER_NAME} \\
                                 --services ${SERVICE_NAME}
                         """
 
@@ -731,8 +737,8 @@ EOL
                                 *Cluster:* ${CLUSTER_NAME}
                                 *Service:* ${SERVICE_NAME}
                                 *Images:*
-                                - Frontend: church-appimg:frontend-${BUILD_NUMBER}
-                                - Backend: church-appimg:backend-${BUILD_NUMBER}
+                                - Frontend: ${frontendImage}
+                                - Backend: ${backendImage}
                                 *Task Definition:* ${taskDefArn}
                             """
                         )
