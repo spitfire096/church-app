@@ -250,11 +250,11 @@ EOL
             steps {
                 dir('FA-backend') {
                     sh '''
-                        # Install TypeScript and dependencies
-                        npm install --save-dev typescript @types/node @types/express --legacy-peer-deps
-                        npm install --save express --legacy-peer-deps
+                        # Install TypeScript and all required dependencies
+                        npm install --save-dev typescript @types/node @types/express @types/bcryptjs @types/react --legacy-peer-deps
+                        npm install --save express bcryptjs --legacy-peer-deps
 
-                        # Create tsconfig.json
+                        # Create tsconfig.json with JSX support
                         echo '{
                             "compilerOptions": {
                                 "target": "es6",
@@ -264,7 +264,11 @@ EOL
                                 "strict": true,
                                 "esModuleInterop": true,
                                 "skipLibCheck": true,
-                                "forceConsistentCasingInFileNames": true
+                                "forceConsistentCasingInFileNames": true,
+                                "jsx": "react",
+                                "moduleResolution": "node",
+                                "allowJs": true,
+                                "declaration": true
                             },
                             "include": ["src/**/*"],
                             "exclude": ["node_modules", "**/*.test.ts"]
@@ -276,13 +280,17 @@ EOL
                         # Create a proper index.ts file
                         cat > src/pages/index.ts << 'EOL'
 import express from 'express';
+import { Router } from 'express';
 
 const app = express();
+const router = Router();
 const port = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
+router.get('/', (req, res) => {
     res.json({ message: 'Backend server is running' });
 });
+
+app.use('/', router);
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -292,7 +300,7 @@ export default app;
 EOL
 
                         # Update package.json with build script
-                        sed -i '/\"scripts\": {/a "build": "tsc",' package.json
+                        sed -i '/\"scripts\":/a \    \"build\": \"tsc\",' package.json
 
                         # Run build
                         npm run build
