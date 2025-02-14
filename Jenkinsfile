@@ -271,6 +271,7 @@ const sequelize = new Sequelize({
     models: [__dirname + '/../models']
 });
 
+export { sequelize };
 export default sequelize;
 EOL
 
@@ -345,7 +346,7 @@ export const requireRole = (role: string) => {
 };
 EOL
 
-                        # Update tsconfig.json for decorators
+                        # Update tsconfig.json with proper JSX configuration
                         echo '{
                             "compilerOptions": {
                                 "target": "es6",
@@ -359,49 +360,55 @@ EOL
                                 "experimentalDecorators": true,
                                 "emitDecoratorMetadata": true,
                                 "moduleResolution": "node",
-                                "declaration": true
+                                "declaration": true,
+                                "jsx": "react",
+                                "allowJs": true,
+                                "isolatedModules": true
                             },
                             "include": ["src/**/*"],
                             "exclude": ["node_modules", "**/*.test.ts"]
                         }' > tsconfig.json
 
-                        # Create main server file
-                        cat > src/pages/index.ts << 'EOL'
+                        # Update FirstTimerForm.tsx with proper React import
+                        cat > src/components/FirstTimerForm.tsx << 'EOL'
+import React from 'react';
+
+export const FirstTimerForm: React.FC = () => {
+    return (
+        <div>
+            <h1>First Timer Form</h1>
+            {/* Add form elements here */}
+        </div>
+    );
+};
+EOL
+
+                        # Update server.ts
+                        cat > src/server.ts << 'EOL'
 import express from 'express';
-import { Router } from 'express';
-import { models } from '../models';
-import { auth, requireRole } from '../middleware/auth';
+import { sequelize } from './config/database';
+import { FirstTimer, FollowUpTask } from './models';
+import { auth } from './middleware/auth';
 
 const app = express();
-const router = Router();
+const router = express.Router();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Initialize database
+sequelize.sync().then(() => {
+    console.log('Database synchronized');
+});
 
 // Routes
 router.get('/', (req, res) => {
     res.json({ message: 'Backend server is running' });
 });
 
-// First Timer routes
-router.get('/first-timers', auth, async (req, res) => {
-    try {
-        const firstTimers = await models.FirstTimer.findAll();
-        res.json(firstTimers);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch first timers' });
-    }
-});
-
 // Mount routes
 app.use('/api', router);
-
-// Error handling
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something broke!' });
-});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
