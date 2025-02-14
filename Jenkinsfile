@@ -391,10 +391,11 @@ ENV NODE_ENV=production
 # Create directories and set permissions
 RUN mkdir -p .next/static public && chown -R node:node .
 
-# Copy build output
-COPY --from=builder --chown=node:node /app/.next/static ./.next/static 2>/dev/null || echo 'No static files'
-COPY --from=builder --chown=node:node /app/public ./public 2>/dev/null || echo 'No public files'
-COPY --from=builder --chown=node:node /app/.next/standalone/ . 2>/dev/null || echo 'No standalone files'
+# Copy build output (using shell to handle missing files)
+RUN mkdir -p /app/.next/static /app/public
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone/ ./
 
 EXPOSE 3000
 
