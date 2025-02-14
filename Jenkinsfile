@@ -418,6 +418,43 @@ app.listen(port, () => {
 export default app;
 EOL
 
+                        # Create pages directory and index.ts
+                        mkdir -p src/pages
+                        cat > src/pages/index.ts << 'EOL'
+import express, { Request, Response } from 'express';
+import { sequelize } from '../config/database';
+import { FirstTimer, FollowUpTask } from '../models';
+
+const router = express.Router();
+
+// Health check endpoint
+router.get('/health', (req: Request, res: Response) => {
+    res.json({ status: 'healthy' });
+});
+
+// Get all first timers
+router.get('/first-timers', async (req: Request, res: Response) => {
+    try {
+        const firstTimers = await FirstTimer.findAll();
+        res.json(firstTimers);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch first timers' });
+    }
+});
+
+// Create a new first timer
+router.post('/first-timers', async (req: Request, res: Response) => {
+    try {
+        const firstTimer = await FirstTimer.create(req.body);
+        res.status(201).json(firstTimer);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create first timer' });
+    }
+});
+
+export default router;
+EOL
+
                         # Run build
                         npm run build
                     '''
