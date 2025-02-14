@@ -58,9 +58,9 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
                             # Create .npmrc with correct auth configuration
-                            echo "registry=http://54.92.205.87:8081/repository/npm-group/" > .npmrc
-                            echo "//54.92.205.87:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
-                            echo "//54.92.205.87:8081/repository/npm-group/:email=admin@example.com" >> .npmrc
+                            echo "registry=http://54.146.241.223:8081/repository/npm-group/" > .npmrc
+                            echo "//54.146.241.223:8081/repository/npm-group/:_auth=\$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)" >> .npmrc
+                            echo "//54.146.241.223:8081/repository/npm-group/:email=admin@example.com" >> .npmrc
                             echo "strict-ssl=false" >> .npmrc
                             echo "legacy-peer-deps=true" >> .npmrc
                             echo "always-auth=true" >> .npmrc
@@ -70,9 +70,9 @@ pipeline {
                             cp .npmrc FA-backend/.npmrc
                             
                             # Fix npm config
-                            npm config set registry http://54.92.205.87:8081/repository/npm-group/
-                            npm config set //54.92.205.87:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
-                            npm config set //54.92.205.87:8081/repository/npm-group/:email admin@example.com
+                            npm config set registry http://54.146.241.223:8081/repository/npm-group/
+                            npm config set //54.146.241.223:8081/repository/npm-group/:_auth \$(echo -n '${NEXUS_USER}:${NEXUS_PASS}' | base64)
+                            npm config set //54.146.241.223:8081/repository/npm-group/:email admin@example.com
                         """
                     }
                 }
@@ -83,9 +83,9 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        curl -v http://54.92.205.87:8081/repository/npm-group/
-                        curl -v http://54.92.205.87:8081/
-                        npm config set registry http://54.92.205.87:8081/repository/npm-group/
+                        curl -v http://54.146.241.223:8081/repository/npm-group/
+                        curl -v http://54.146.241.223:8081/
+                        npm config set registry http://54.146.241.223:8081/repository/npm-group/
                     '''
                 }
             }
@@ -198,7 +198,7 @@ EOL
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
                             -Dsonar.projectKey=church-app-frontend \\
                             -Dsonar.sources=app \\
-                            -Dsonar.host.url=http://3.90.41.68:9000 \\
+                            -Dsonar.host.url=http://3.95.56.66:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
@@ -556,8 +556,8 @@ EOL
             steps {
                 dir('FA-backend') {
                     sh '''
-                        curl -v http://3.90.41.68:9000/api/v2/analysis/version
-                        nc -zv 3.90.41.68 9000
+                        curl -v http://3.95.56.66:9000/api/v2/analysis/version
+                        nc -zv 3.95.56.66 9000
                     '''
                     
                     withSonarQubeEnv('SonarQube') {
@@ -565,7 +565,7 @@ EOL
                             ${tool('SonarScanner')}/bin/sonar-scanner \\
                             -Dsonar.projectKey=church-app-backend \\
                             -Dsonar.sources=src \\
-                            -Dsonar.host.url=http://3.90.41.68:9000 \\
+                            -Dsonar.host.url=http://3.95.56.66:9000 \\
                             -Dsonar.login=\${SONAR_TOKEN} \\
                             -Dsonar.sourceEncoding=UTF-8 \\
                             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \\
@@ -597,7 +597,7 @@ EOL
                                     *Build Number:* ${env.BUILD_NUMBER}
                                     *Status:* ${qg.status}
                                     *Details:* Check SonarQube analysis for more information
-                                    *SonarQube URL:* http://3.90.41.68:9000/dashboard?id=church-app-frontend
+                                    *SonarQube URL:* http://3.95.56.66:9000/dashboard?id=church-app-frontend
                                     
                                     Note: Pipeline will continue despite quality gate failure
                                 """
@@ -772,18 +772,18 @@ EOL
                     withCredentials([usernamePassword(credentialsId: 'nexus-credentials', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh """
                             # Upload Frontend artifact
-                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${frontendArtifact} \
-                                "http://54.92.205.87:8081/repository/church-app-releases/frontend/${frontendArtifact}"
+                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${frontendArtifact} \\
+                                "http://54.146.241.223:8081/repository/church-app-releases/frontend/${frontendArtifact}"
                             
                             # Upload Backend artifact
-                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${backendArtifact} \
-                                "http://54.92.205.87:8081/repository/church-app-releases/backend/${backendArtifact}"
+                            curl -v -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file ${backendArtifact} \\
+                                "http://54.146.241.223:8081/repository/church-app-releases/backend/${backendArtifact}"
                         """
                     }
                     
                     // Update Slack message to include artifact information
-                    env.FRONTEND_ARTIFACT_URL = "http://54.92.205.87:8081/repository/church-app-releases/frontend/${frontendArtifact}"
-                    env.BACKEND_ARTIFACT_URL = "http://54.92.205.87:8081/repository/church-app-releases/backend/${backendArtifact}"
+                    env.FRONTEND_ARTIFACT_URL = "http://54.146.241.223:8081/repository/church-app-releases/frontend/${frontendArtifact}"
+                    env.BACKEND_ARTIFACT_URL = "http://54.146.241.223:8081/repository/church-app-releases/backend/${backendArtifact}"
                 }
             }
         }
