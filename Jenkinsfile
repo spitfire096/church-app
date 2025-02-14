@@ -250,40 +250,54 @@ EOL
             steps {
                 dir('FA-backend') {
                     sh '''
-                        # Install TypeScript and dependencies if not present
-                        npm install --save-dev typescript @types/node --legacy-peer-deps || true
+                        # Install TypeScript and dependencies
+                        npm install --save-dev typescript @types/node @types/express --legacy-peer-deps
+                        npm install --save express --legacy-peer-deps
 
-                        # Create tsconfig.json if not exists
-                        if [ ! -f tsconfig.json ]; then
-                            echo '{
-                                "compilerOptions": {
-                                    "target": "es6",
-                                    "module": "commonjs",
-                                    "outDir": "./dist",
-                                    "rootDir": "./src",
-                                    "strict": true,
-                                    "esModuleInterop": true,
-                                    "skipLibCheck": true,
-                                    "forceConsistentCasingInFileNames": true
-                                },
-                                "include": ["src/**/*"],
-                                "exclude": ["node_modules", "**/*.test.ts"]
-                            }' > tsconfig.json
+                        # Create tsconfig.json
+                        echo '{
+                            "compilerOptions": {
+                                "target": "es6",
+                                "module": "commonjs",
+                                "outDir": "./dist",
+                                "rootDir": "./src",
+                                "strict": true,
+                                "esModuleInterop": true,
+                                "skipLibCheck": true,
+                                "forceConsistentCasingInFileNames": true
+                            },
+                            "include": ["src/**/*"],
+                            "exclude": ["node_modules", "**/*.test.ts"]
+                        }' > tsconfig.json
+
+                        # Create src directory
+                        mkdir -p src/pages
+
+                        # Create a proper index.ts file
+                        cat > src/pages/index.ts << 'EOL'
+import express from 'express';
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+    res.json({ message: 'Backend server is running' });
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
+
+export default app;
+EOL
+
+                        # Add build script to package.json if not present
+                        if ! grep -q '"build"' package.json; then
+                            sed -i '/"scripts": {/a \    "build": "tsc",' package.json
                         fi
 
-                        # Ensure src directory exists
-                        mkdir -p src
-
-                        # Create a basic index.ts if it doesn't exist
-                        if [ ! -f src/index.ts ]; then
-                            echo "console.log('Backend server starting...');" > src/index.ts
-                        fi
-
-                        # Run build with error handling
-                        npm run build || {
-                            echo "Build failed but continuing..."
-                            exit 0
-                        }
+                        # Run build
+                        npm run build
                     '''
                 }
             }
