@@ -383,15 +383,15 @@ export const FirstTimerForm: React.FC = () => {
 };
 EOL
 
-                        # Update server.ts
+                        # Update server.ts with complete content
                         cat > src/server.ts << 'EOL'
 import express from 'express';
 import { sequelize } from './config/database';
 import { FirstTimer, FollowUpTask } from './models';
-import { auth } from './middleware/auth';
+import firstTimerRoutes from './routes/FirstTimer';
+import followUpTaskRoutes from './routes/followUpTask';
 
 const app = express();
-const router = express.Router();
 
 // Middleware
 app.use(express.json());
@@ -403,12 +403,19 @@ sequelize.sync().then(() => {
 });
 
 // Routes
-router.get('/', (req, res) => {
-    res.json({ message: 'Backend server is running' });
+app.use('/api/first-timers', firstTimerRoutes);
+app.use('/api/follow-up-tasks', followUpTaskRoutes);
+
+// Health check
+app.get('/health', (req, res) => {
+    res.json({ status: 'healthy' });
 });
 
-// Mount routes
-app.use('/api', router);
+// Error handling
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something broke!' });
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
