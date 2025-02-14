@@ -291,10 +291,8 @@ app.listen(port, () => {
 export default app;
 EOL
 
-                        # Add build script to package.json if not present
-                        if ! grep -q '"build"' package.json; then
-                            sed -i '/"scripts": {/a \    "build": "tsc",' package.json
-                        fi
+                        # Update package.json with build script
+                        sed -i '/\"scripts\": {/a "build": "tsc",' package.json
 
                         # Run build
                         npm run build
