@@ -251,8 +251,8 @@ EOL
                 dir('FA-backend') {
                     sh '''
                         # Install TypeScript and all required dependencies
-                        npm install --save-dev typescript @types/node @types/express @types/bcryptjs @types/react --legacy-peer-deps
-                        npm install --save express bcryptjs --legacy-peer-deps
+                        npm install --save-dev typescript @types/node @types/express @types/bcryptjs @types/react @types/react-dom --legacy-peer-deps
+                        npm install --save express bcryptjs react react-dom --legacy-peer-deps
 
                         # Create tsconfig.json with JSX support
                         echo '{
@@ -268,19 +268,62 @@ EOL
                                 "jsx": "react",
                                 "moduleResolution": "node",
                                 "allowJs": true,
-                                "declaration": true
+                                "declaration": true,
+                                "isolatedModules": true
                             },
                             "include": ["src/**/*"],
                             "exclude": ["node_modules", "**/*.test.ts"]
                         }' > tsconfig.json
 
-                        # Create src directory
-                        mkdir -p src/pages
+                        # Create src directory structure
+                        mkdir -p src/{components,models,routes,middleware}
 
-                        # Create a proper index.ts file
+                        # Create auth middleware
+                        cat > src/middleware/auth.ts << 'EOL'
+export const authMiddleware = (req: any, res: any, next: any) => {
+    // Add authentication logic here
+    next();
+};
+EOL
+
+                        # Create models
+                        cat > src/models/FirstTimer.ts << 'EOL'
+export class FirstTimer {
+    // Add model properties here
+}
+EOL
+
+                        cat > src/models/FollowUpTask.ts << 'EOL'
+export class FollowUpTask {
+    // Add model properties here
+}
+EOL
+
+                        cat > src/models/index.ts << 'EOL'
+export { FirstTimer } from './FirstTimer';
+export { FollowUpTask } from './FollowUpTask';
+EOL
+
+                        # Create React component
+                        cat > src/components/FirstTimerForm.tsx << 'EOL'
+import React from 'react';
+
+export const FirstTimerForm: React.FC = () => {
+    return (
+        <div>
+            <h1>First Timer Form</h1>
+            {/* Add form elements here */}
+        </div>
+    );
+};
+EOL
+
+                        # Create main server file
                         cat > src/pages/index.ts << 'EOL'
 import express from 'express';
 import { Router } from 'express';
+import { FirstTimer, FollowUpTask } from '../models';
+import { authMiddleware } from '../middleware/auth';
 
 const app = express();
 const router = Router();
