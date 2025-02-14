@@ -455,6 +455,89 @@ router.post('/first-timers', async (req: Request, res: Response) => {
 export default router;
 EOL
 
+                        # Create associations file with proper imports
+                        cat > src/models/associations.ts << 'EOL'
+import { FirstTimer } from './FirstTimer';
+import { FollowUpTask } from './FollowUpTask';
+
+// Define associations
+FirstTimer.hasMany(FollowUpTask, {
+    sourceKey: 'id',
+    foreignKey: 'firstTimerId',
+    as: 'followUpTasks'
+});
+
+FollowUpTask.belongsTo(FirstTimer, {
+    targetKey: 'id',
+    foreignKey: 'firstTimerId',
+    as: 'firstTimer'
+});
+EOL
+
+                        # Create FirstTimer route with proper types
+                        cat > src/routes/FirstTimer.ts << 'EOL'
+import express, { Request, Response } from 'express';
+import { FirstTimer, FollowUpTask } from '../models';
+import { auth } from '../middleware/auth';
+
+const router = express.Router();
+
+// Get all first timers
+router.get('/', auth, async (req: Request, res: Response) => {
+    try {
+        const firstTimers = await FirstTimer.findAll({
+            include: [{ model: FollowUpTask, as: 'followUpTasks' }]
+        });
+        res.json(firstTimers);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch first timers' });
+    }
+});
+
+// Create first timer
+router.post('/', auth, async (req: Request, res: Response) => {
+    try {
+        const firstTimer = await FirstTimer.create(req.body);
+        res.status(201).json(firstTimer);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create first timer' });
+    }
+});
+
+export default router;
+EOL
+
+                        # Create FollowUpTask route with proper imports
+                        cat > src/routes/followUpTask.ts << 'EOL'
+import express, { Request, Response } from 'express';
+import { FollowUpTask } from '../models';
+import { auth } from '../middleware/auth';
+
+const router = express.Router();
+
+// Get all follow-up tasks
+router.get('/', auth, async (req: Request, res: Response) => {
+    try {
+        const tasks = await FollowUpTask.findAll();
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch follow-up tasks' });
+    }
+});
+
+// Create follow-up task
+router.post('/', auth, async (req: Request, res: Response) => {
+    try {
+        const task = await FollowUpTask.create(req.body);
+        res.status(201).json(task);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create follow-up task' });
+    }
+});
+
+export default router;
+EOL
+
                         # Run build
                         npm run build
                     '''
