@@ -721,12 +721,38 @@ EOL
                                 --force-new-deployment
                         """
 
-                        // Wait for service to stabilize
-                        sh """
-                            aws ecs wait services-stable \\
-                                --cluster ${CLUSTER_NAME} \\
-                                --services ${SERVICE_NAME}
-                        """
+                        // Wait for service to stabilize with timeout and polling
+                        def maxAttempts = 30
+                        def attempt = 0
+                        def isStable = false
+
+                        while (!isStable && attempt < maxAttempts) {
+                            attempt++
+                            echo "Checking service stability (Attempt ${attempt}/${maxAttempts})..."
+                            
+                            def status = sh(
+                                script: """
+                                    aws ecs describe-services \\
+                                        --cluster ${CLUSTER_NAME} \\
+                                        --services ${SERVICE_NAME} \\
+                                        --query 'services[0].deployments[0].rolloutState' \\
+                                        --output text
+                                """,
+                                returnStdout: true
+                            ).trim()
+
+                            if (status == 'COMPLETED') {
+                                isStable = true
+                                echo "Service has stabilized successfully!"
+                            } else {
+                                echo "Current status: ${status}"
+                                sleep 20 // Wait 20 seconds before next check
+                            }
+                        }
+
+                        if (!isStable) {
+                            error "Service failed to stabilize after ${maxAttempts} attempts"
+                        }
 
                         // Notify Slack about deployment
                         slackSend(
@@ -743,21 +769,6 @@ EOL
                             """
                         )
                     }
-                }
-            }
-            post {
-                failure {
-                    slackSend(
-                        channel: '#devopscicd',
-                        color: 'danger',
-                        message: """
-                            ❌ *ECS Deployment Failed!*
-                            *Cluster:* ${CLUSTER_NAME}
-                            *Service:* ${SERVICE_NAME}
-                            *Build Number:* ${BUILD_NUMBER}
-                            *Check logs for details:* ${BUILD_URL}console
-                        """
-                    )
                 }
             }
         }
