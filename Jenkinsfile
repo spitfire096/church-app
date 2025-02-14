@@ -300,7 +300,13 @@ export default app;
 EOL
 
                         # Update package.json with build script
-                        sed -i '/\"scripts\":/a \    \"build\": \"tsc\",' package.json
+                        node -e '
+                            const fs = require("fs");
+                            const pkg = JSON.parse(fs.readFileSync("package.json"));
+                            pkg.scripts = pkg.scripts || {};
+                            pkg.scripts.build = "tsc";
+                            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+                        '
 
                         # Run build
                         npm run build
