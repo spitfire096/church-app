@@ -11,12 +11,18 @@ pipeline {
         NPM_CONFIG_USERCONFIG = "${WORKSPACE}/.npmrc"
         CLUSTER_NAME = 'church-app-cluster'
         SERVICE_NAME = 'church-app-service'
+        TF_VERSION = '1.5.0'
+        TF_STATE_BUCKET = 'church-app-terraform-state'
+        TF_STATE_KEY = 'terraform.tfstate'
+        TF_STATE_REGION = 'us-east-1'
+        AWS_DEFAULT_REGION = 'us-east-1'
     }
     
     // Tool configurations
     tools {
         git 'Default'
         nodejs 'NodeJS 18'
+        terraform 'Terraform'
     }
     
     // Pipeline options
@@ -48,6 +54,44 @@ pipeline {
                         npm cache clean --force
                         rm -rf node_modules .next
                     '''
+                }
+            }
+        }
+        
+        stage('Terraform Init & Plan') {
+            steps {
+                dir('terraform') {
+                    script {
+                        // Initialize Terraform
+                        sh """
+                            terraform init \
+                                -backend-config="bucket=${TF_STATE_BUCKET}" \
+                                -backend-config="key=${TF_STATE_KEY}" \
+                                -backend-config="region=${TF_STATE_REGION}"
+                            
+                            # Create plan
+                            terraform plan -out=tfplan
+                        """
+                        
+                        // Optionally send plan to Slack
+                        def plan = sh(
+                            script: "terraform show -no-color tfplan",
+                            returnStdout: true
+                        ).trim()
+                        
+                        slackSend(
+                            channel: '#devopscicd',
+                            color: 'good',
+                            message: """
+                                *Terraform Plan - ${env.JOB_NAME}*
+                                *Build:* ${env.BUILD_NUMBER}
+                                *Changes:*
+                                ```
+                                ${plan}
+                                ```
+                            """
+                        )
+                    }
                 }
             }
         }
@@ -556,6 +600,48 @@ EOL
             }
         }
         
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform') {
+                    script {
+                        // Get approval for production environments
+                        if (env.BRANCH_NAME == 'main') {
+                            timeout(time: 1, unit: 'HOURS') {
+                                input message: 'Apply Terraform changes?'
+                            }
+                        }
+                        
+                        // Apply changes
+                        sh "terraform apply -auto-approve tfplan"
+                        
+                        // Export infrastructure outputs
+                        def outputs = sh(
+                            script: "terraform output -json",
+                            returnStdout: true
+                        ).trim()
+                        
+                        // Parse and store outputs
+                        def tfOutputs = readJSON text: outputs
+                        env.ECS_CLUSTER_ARN = tfOutputs.ecs_cluster_arn.value
+                        env.ALB_DNS_NAME = tfOutputs.alb_dns_name.value
+                        
+                        // Notify Slack
+                        slackSend(
+                            channel: '#devopscicd',
+                            color: 'good',
+                            message: """
+                                *Terraform Apply Successful!*
+                                *Build:* ${env.BUILD_NUMBER}
+                                *Infrastructure Updates:*
+                                • ECS Cluster: ${env.ECS_CLUSTER_ARN}
+                                • Load Balancer: ${env.ALB_DNS_NAME}
+                            """
+                        )
+                    }
+                }
+            }
+        }
+        
         stage('Deploy to ECS') {
             steps {
                 script {
@@ -662,6 +748,10 @@ EOL
                 FA-frontend/.next/**/*,
                 FA-frontend/public/**/*
             ''', allowEmptyArchive: true
+            dir('terraform') {
+                // Clean up Terraform files
+                deleteDir()
+            }
         }
         success {
             slackSend(
