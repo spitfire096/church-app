@@ -2,7 +2,12 @@ terraform {
   required_version = ">= 1.0.0"
 
   backend "s3" {
-    # Backend configuration will be provided during terraform init
+    bucket         = "church-app-terraform-state"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "church-app-terraform-locks"
+    kms_key_id     = "alias/terraform-bucket-key"
   }
 
   required_providers {
