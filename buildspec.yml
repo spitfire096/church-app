@@ -1,0 +1,51 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - npm install -g typescript
+      - npm install -g @aws-cdk/core
+      
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      
+  build:
+    commands:
+      # Build Frontend
+      - echo Building Frontend...
+      - cd FA-frontend
+      - npm install
+      - npm run build
+      - docker build -t $REPOSITORY_URI:frontend-$IMAGE_TAG -f Dockerfile.ci .
+      
+      # Build Backend
+      - echo Building Backend...
+      - cd ../FA-backend
+      - npm install
+      - npm run build
+      - docker build -t $REPOSITORY_URI:backend-$IMAGE_TAG .
+      
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:frontend-$IMAGE_TAG
+      - docker push $REPOSITORY_URI:backend-$IMAGE_TAG
+      - echo Writing image definitions file...
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:frontend-$IMAGE_TAG > imageDefinitions-frontend.json
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:backend-$IMAGE_TAG > imageDefinitions-backend.json
+
+artifacts:
+  files:
+    - FA-frontend/imageDefinitions-frontend.json
+    - FA-backend/imageDefinitions-backend.json
+    - FA-frontend/Dockerrun.aws.json
+    - appspec.yml
+    - scripts/*
+  discard-paths: no 
