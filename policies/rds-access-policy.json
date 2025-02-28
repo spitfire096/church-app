@@ -1,0 +1,24 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "rds-db:connect"
+            ],
+            "Resource": [
+                "arn:aws:rds-db:us-east-1:522814712595:dbuser:${DB_RESOURCE_ID}/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DescribeSecurityGroups",
+                "ec2:AuthorizeSecurityGroupIngress"
+            ],
+            "Resource": [
+                "arn:aws:ec2:us-east-1:522814712595:security-group/sg-0bcae8016ad97084b"
+            ]
+        }
+    ]
+} 
